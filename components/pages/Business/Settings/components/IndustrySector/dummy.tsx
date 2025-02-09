@@ -1,0 +1,21 @@
+export const industry_categories = [
+  {
+    name: "3D Animation,Graphic Design & Illustration",
+    defaultChecked: false,
+    skills: ["Animation", "Illustration", "Blender"],
+  },
+  {
+    name: "Accountant",
+    defaultChecked: false,
+    skills: ["Receptionist", "Administrative", "A.R Clerk"],
+  },
+  { name: "Accounting & Finance", defaultChecked: false },
+  { name: "Architectural Design", defaultChecked: false },
+  {
+    name: "Big Data",
+    defaultChecked: false,
+    skills: ["Data Analysis", "Data Mining", "Machine Learning", "Analytics"],
+  },
+  { name: "Book Keeping", defaultChecked: false },
+  { name: "Business & Management", defaultChecked: false },
+];

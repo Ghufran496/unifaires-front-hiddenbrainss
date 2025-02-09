@@ -1,0 +1,1056 @@
+    
+import rec1 from "@/public/images/rec1.png";
+import rec2 from "@/public/images/rec2.png";
+import location from "@/public/images/location1.svg";
+import bookmark1 from "@/public/images/bookmark.svg";
+import tower from "@/public/images/tower.png";
+import chiken from "@/public/images/chiken.png";
+import climate from "@/public/images/climate.png";
+import google from "@/public/images/google.png";
+import macdonald from "@/public/images/macdonald.png";
+import { StarOutlined, StarFilled } from "@ant-design/icons";
+
+
+
+        first file cards
+          {/* <Col lg={6} sm={24} xs={24} className="flex">
+            <Row>
+              <Col lg={24} sm={24} xs={24}>
+                <Image src={tower} alt="paris picture" />
+              </Col>
+
+              <Col lg={24} sm={23} xs={23}>
+                <Card className="-mt-20 leading-3 rounded-tr-2xl rounded-tl-2xl">
+                  <Row gutter={[16, 16]}>
+                    <Col lg={24}>
+                      <p className="text-sm leading-3 text-black font-Montserrat">
+                        Education
+                      </p>
+                    </Col>
+                    <Col lg={24} sm={24} xs={24}>
+                      <p className="text-sm leading-3 font-Montserrat text-grey-70">
+                        Alvarez and Marsal
+                      </p>
+                    </Col>
+
+                    <Col lg={24} sm={24} xs={24}>
+                      <Row>
+                        <Col lg={4}>
+                          <Image src={location} alt="paris picture" />
+                        </Col>
+                        <Col lg={16}>
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            Germany
+                          </p>
+                        </Col>
+                      </Row>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={16}>
+                        <Col lg={24} sm={24} xs={24}>
+                          <p className="text-sm text-black font-Montserrat">
+                            $2000
+                          </p>
+                        </Col>
+
+                        <Col lg={10}>
+                          <Button className="purple-button" size="small">
+                            Open Grant
+                          </Button>
+                        </Col>
+
+                        <Col lg={14}>
+                          <Button className="purple-button" size="small">
+                            Academic Issues
+                          </Button>
+                        </Col>
+
+                        <Col lg={20} className="pt-3">
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            3 weeks ago
+                          </p>
+                        </Col>
+
+                        <Col lg={2} className="pt-3">
+                          <Image src={bookmark1} alt="paris picture" />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+            </Row>
+          </Col>
+
+          <Col lg={6} sm={24} xs={24} className="flex">
+            <Row>
+              <Col lg={24}>
+                <Image src={chiken} alt="paris picture" />
+              </Col>
+
+              <Col lg={24} sm={23} xs={23}>
+                <Card className="-mt-20 leading-3 rounded-tr-2xl rounded-tl-2xl">
+                  <Row gutter={[16, 16]}>
+                    <Col lg={24}>
+                      <p className="text-sm leading-3 text-black font-Montserrat">
+                        Animal, Environment & Natural Resources{" "}
+                      </p>
+                    </Col>
+                    <Col lg={24} sm={24} xs={24}>
+                      <p className="text-sm leading-3 font-Montserrat text-grey-70">
+                        Alvarez and Marsal
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row>
+                        <Col lg={4}>
+                          <Image src={location} alt="paris picture" />
+                        </Col>
+                        <Col lg={16}>
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            Germany
+                          </p>
+                        </Col>
+                      </Row>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={16}>
+                        <Col lg={24} sm={24} xs={24}>
+                          <p className="text-sm text-black font-Montserrat">
+                            $2000
+                          </p>
+                        </Col>
+                        <Col lg={10}>
+                          <Button className="purple-button" size="small">
+                            Open Grant
+                          </Button>
+                        </Col>
+
+                        <Col lg={14}>
+                          <Button className="purple-button" size="small">
+                            Academic Issues
+                          </Button>
+                        </Col>
+
+                        <Col lg={20} className="pt-3">
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            3 weeks ago
+                          </p>
+                        </Col>
+
+                        <Col lg={2} className="pt-3">
+                          <Image src={bookmark1} alt="paris picture" />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+            </Row>
+          </Col>
+
+          <Col lg={6} sm={24} xs={24} className="flex">
+            <Row>
+              <Col lg={24}>
+                <Image src={tower} alt="paris picture" />
+              </Col>
+
+              <Col lg={24} sm={23} xs={23}>
+                <Card className="-mt-20 leading-3 rounded-tr-2xl rounded-tl-2xl">
+                  <Row gutter={[16, 16]}>
+                    <Col lg={24} sm={24} xs={24}>
+                      <p className="text-sm leading-3 text-black font-Montserrat">
+                        Competitiveness
+                      </p>
+                    </Col>
+                    <Col lg={24} sm={24} xs={24}>
+                      <p className="text-sm leading-3 font-Montserrat text-grey-70">
+                        Alvarez and Marsal
+                      </p>
+                    </Col>
+
+                    <Col lg={24} sm={24} xs={24}>
+                      <Row>
+                        <Col lg={4}>
+                          <Image src={location} alt="paris picture" />
+                        </Col>
+                        <Col lg={16}>
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            Germany
+                          </p>
+                        </Col>
+                      </Row>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={16}>
+                        <Col lg={24} sm={24} xs={24}>
+                          <p className="text-sm text-black font-Montserrat">
+                            $2000
+                          </p>
+                        </Col>
+                        <Col lg={10}>
+                          <Button className="purple-button" size="small">
+                            Open Grant
+                          </Button>
+                        </Col>
+
+                        <Col lg={14}>
+                          <Button className="purple-button" size="small">
+                            Academic Issues
+                          </Button>
+                        </Col>
+
+                        <Col lg={20} className="pt-3">
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            3 weeks ago
+                          </p>
+                        </Col>
+
+                        <Col lg={2} className="pt-3">
+                          <Image src={bookmark1} alt="paris picture" />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+            </Row>
+          </Col>
+
+          <Col lg={6} sm={24} xs={24} className="flex">
+            <Row>
+              <Col lg={24}>
+                <Image src={climate} alt="paris picture" />
+              </Col>
+
+              <Col lg={24} sm={23} xs={23}>
+                <Card className="-mt-20 leading-3 rounded-tr-2xl rounded-tl-2xl">
+                  <Row gutter={[16, 16]}>
+                    <Col lg={24}>
+                      <p className="text-sm leading-3 text-black font-Montserrat">
+                        Climate Change
+                      </p>
+                    </Col>
+                    <Col lg={24} sm={24} xs={24}>
+                      <p className="text-sm leading-3 font-Montserrat text-grey-70">
+                        Alvarez and Marsal
+                      </p>
+                    </Col>
+
+                    <Col lg={24} sm={24} xs={24}>
+                      <Row>
+                        <Col lg={4}>
+                          <Image src={location} alt="paris picture" />
+                        </Col>
+                        <Col lg={16}>
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            Germany
+                          </p>
+                        </Col>
+                      </Row>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={16}>
+                        <Col lg={24} sm={24} xs={24}>
+                          <p className="text-sm text-black font-Montserrat">
+                            $2000
+                          </p>
+                        </Col>
+                        <Col lg={10}>
+                          <Button className="purple-button" size="small">
+                            Open Grant
+                          </Button>
+                        </Col>
+
+                        <Col lg={14}>
+                          <Button className="purple-button" size="small">
+                            Academic Issues
+                          </Button>
+                        </Col>
+
+                        <Col lg={20} className="pt-3">
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            3 weeks ago
+                          </p>
+                        </Col>
+
+                        <Col lg={2} className="pt-3">
+                          <Image src={bookmark1} alt="paris picture" />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+            </Row>
+          </Col> */}
+
+
+
+            {/* <Col lg={6} sm={24} xs={24} className="flex">
+            <Row>
+              <Col lg={24} sm={24} xs={24}>
+                <Image src={rec1} alt="paris picture" />
+              </Col>
+
+              <Col xl={24} lg={24} md={8} sm={10} xs={23}>
+                <Card className="card-rounded">
+                  <Row gutter={[16, 16]}>
+                    <Col lg={24}>
+                      <p className="text-sm text-black font-Montserrat">
+                        Entrepreneural Operations
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <p className="text-sm font-Montserrat text-grey-70">
+                        Munich University of Applied Sciences
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row>
+                        <Col lg={4}>
+                          <Image src={location} alt="paris picture" />
+                        </Col>
+                        <Col lg={16}>
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            Munich
+                          </p>
+                        </Col>
+                      </Row>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={[16, 16]}>
+                        <Col lg={3} className="">
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            4.0
+                          </p>
+                        </Col>
+
+                        <Col lg={16}>
+                          <StarFilled className="text-gold-50" />
+                          <StarFilled className="text-gold-50" />
+                          <StarFilled className="text-gold-50" />
+                          <StarFilled className="text-gold-50" />
+                          <StarOutlined />
+                        </Col>
+
+                        <Col lg={24}>
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            40 total hours - 240 Lessons - Intermediate level
+                          </p>
+                        </Col>
+
+                        <Col lg={24}>
+                          <p className="text-sm text-black font-Montserrat">
+                            $1000
+                          </p>
+                        </Col>
+
+                        <Col xl={10} lg={10}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            Bestseller
+                          </Button>
+                        </Col>
+
+                        <Col xl={10} lg={10}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl "
+                            size="small"
+                          >
+                            Part-Time
+                          </Button>
+                        </Col>
+
+                        <Col xl={2} lg={2} className="">
+                          <Image src={bookmark1} alt="paris picture" />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+            </Row>
+          </Col>
+
+          <Col lg={6} md={8} className="flex">
+            <Row gutter={[16, 16]}>
+              <Col lg={24}>
+                <Image src={rec2} alt="paris picture" />
+              </Col>
+
+              <Col lg={24} sm={23} xs={23}>
+                <Card className="card-rounded">
+                  <Row gutter={[16, 16]}>
+                    <Col lg={24}>
+                      <p className="text-sm text-black font-Montserrat">
+                        Project & Program Management
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <p className="text-sm font-Montserrat text-grey-70">
+                        Munich University of Applied Sciences
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={[16, 16]}>
+                        <Col lg={4}>
+                          <Image src={location} alt="paris picture" />
+                        </Col>
+                        <Col lg={16}>
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            Munich
+                          </p>
+                        </Col>
+                      </Row>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={[16, 16]}>
+                        <Col lg={3} className="">
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            4.0
+                          </p>
+                        </Col>
+
+                        <Col lg={16}>
+                          <StarFilled className="text-gold-50" />
+                          <StarFilled className="text-gold-50" />
+                          <StarFilled className="text-gold-50" />
+                          <StarFilled className="text-gold-50" />
+                          <StarOutlined />
+                        </Col>
+
+                        <Col lg={24}>
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            40 total hours - 240 Lessons - Intermediate level
+                          </p>
+                        </Col>
+
+                        <Col lg={24}>
+                          <p className="text-sm text-black font-Montserrat">
+                            $1000
+                          </p>
+                        </Col>
+
+                        <Col lg={10}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            Bestseller
+                          </Button>
+                        </Col>
+
+                        <Col lg={10}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            Part-Time
+                          </Button>
+                        </Col>
+
+                        <Col lg={2} className="pt-1">
+                          <Image src={bookmark1} alt="paris picture" />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+            </Row>
+          </Col>
+
+          <Col lg={6} md={8} className="flex">
+            <Row gutter={[16, 16]}>
+              <Col lg={24}>
+                <Image src={rec1} alt="paris picture" />
+              </Col>
+
+              <Col lg={24} sm={23} xs={23}>
+                <Card className="card-rounded ">
+                  <Row gutter={[16, 16]}>
+                    <Col lg={24}>
+                      <p className="text-sm text-black font-Montserrat">
+                        International Business
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <p className="text-sm font-Montserrat text-grey-70">
+                        Munich University of Applied Sciences
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={[16, 16]}>
+                        <Col lg={4}>
+                          <Image src={location} alt="paris picture" />
+                        </Col>
+                        <Col lg={16}>
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            Munich
+                          </p>
+                        </Col>
+                      </Row>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={[16, 16]}>
+                        <Col lg={3} className="">
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            4.0
+                          </p>
+                        </Col>
+
+                        <Col lg={16}>
+                          <StarFilled className="text-gold-50" />
+                          <StarFilled className="text-gold-50" />
+                          <StarFilled className="text-gold-50" />
+                          <StarFilled className="text-gold-50" />
+                          <StarOutlined />
+                        </Col>
+
+                        <Col lg={24}>
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            40 total hours - 240 Lessons - Intermediate level
+                          </p>
+                        </Col>
+
+                        <Col lg={24}>
+                          <p className="text-sm text-black font-Montserrat">
+                            $1000
+                          </p>
+                        </Col>
+
+                        <Col lg={10}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            Bestseller
+                          </Button>
+                        </Col>
+
+                        <Col lg={10}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            Part-Time
+                          </Button>
+                        </Col>
+
+                        <Col lg={2} className="pt-1">
+                          <Image src={bookmark1} alt="paris picture" />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+            </Row>
+          </Col>
+
+          <Col lg={6} md={8} className="flex">
+            <Row gutter={[16, 16]}>
+              <Col lg={24}>
+                <Image src={rec2} alt="paris picture" />
+              </Col>
+
+              <Col lg={24} sm={23} xs={23}>
+                <Card className="card-rounded ">
+                  <Row gutter={[16, 16]}>
+                    <Col lg={24}>
+                      <p className="text-sm text-black font-Montserrat">
+                        Human Resources Management
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <p className="text-sm font-Montserrat text-grey-70">
+                        Munich University of Applied Sciences
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={[16, 16]}>
+                        <Col lg={4}>
+                          <Image src={location} alt="paris picture" />
+                        </Col>
+                        <Col lg={16}>
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            Munich
+                          </p>
+                        </Col>
+                      </Row>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={[16, 16]}>
+                        <Col lg={3} className="">
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            4.0
+                          </p>
+                        </Col>
+
+                        <Col lg={16}>
+                          <StarFilled className="text-gold-50" />
+                          <StarFilled className="text-gold-50" />
+                          <StarFilled className="text-gold-50" />
+                          <StarFilled className="text-gold-50" />
+                          <StarOutlined />
+                        </Col>
+
+                        <Col lg={24}>
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            40 total hours - 240 Lessons - Intermediate level
+                          </p>
+                        </Col>
+
+                        <Col lg={24}>
+                          <p className="text-sm text-black font-Montserrat">
+                            $1000
+                          </p>
+                        </Col>
+
+                        <Col lg={10}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            Bestseller
+                          </Button>
+                        </Col>
+
+                        <Col lg={10}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            Part-Time
+                          </Button>
+                        </Col>
+
+                        <Col lg={2} className="pt-1">
+                          <Image src={bookmark1} alt="paris picture" />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+            </Row>
+          </Col> */}
+
+
+          last cards
+
+
+            {/* <Col lg={6} sm={24} xs={24}>
+            <Row>
+              <Col lg={24} sm={24} xs={24}>
+                <Image src={google} alt="paris picture" />
+              </Col>
+
+              <Col lg={24} sm={23} xs={23}>
+                <Card className="-mt-20 leading-3 rounded-tr-2xl rounded-tl-2xl">
+                  <Row gutter={[16, 16]}>
+                    <Col lg={20}>
+                      <p className="text-base font-medium leading-3 text-black font-Montserrat">
+                        WHO studio
+                      </p>
+                    </Col>
+
+                    <Col lg={4}>
+                      <p className="text-base leading-3 text-green-600 font-Montserrat">
+                        Apply
+                      </p>
+                    </Col>
+                    <Col lg={24} sm={24} xs={24}>
+                      <p className="text-base font-semibold leading-3 text-black font-Montserrat">
+                        Banking
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <p className="text-sm font-Montserrat text-grey-70">
+                        Cologne, North Rhine-Westphalia, Germany
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={[16, 16]}>
+                        <Col lg={24}>
+                          <p className="text-base font-medium text-black font-Montserrat">
+                            $10,000 - $15,000
+                            <span className="pl-2 text-sm font-Montserrat text-grey-70">
+                              annually
+                            </span>
+                          </p>
+                        </Col>
+                        <Col lg={10}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            On-Site
+                          </Button>
+                        </Col>
+
+                        <Col lg={14}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            Apprenticeship
+                          </Button>
+                        </Col>
+
+                        <Col lg={20} className="pt-3">
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            3 weeks ago
+                          </p>
+                        </Col>
+
+                        <Col lg={2} className="pt-3">
+                          <Image src={bookmark1} alt="paris picture" />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+            </Row>
+          </Col>
+
+          <Col lg={6} sm={24} xs={24}>
+            <Row>
+              <Col lg={24} sm={24} xs={24}>
+                <Image src={macdonald} alt="paris picture" />
+              </Col>
+
+              <Col lg={24} sm={23} xs={23}>
+                <Card className="-mt-20 leading-3 rounded-tr-2xl rounded-tl-2xl">
+                  <Row gutter={[16, 16]}>
+                    <Col lg={20}>
+                      <p className="text-base font-medium leading-3 text-black font-Montserrat">
+                        WHO studio
+                      </p>
+                    </Col>
+
+                    <Col lg={4}>
+                      <p className="text-base leading-3 text-green-600 font-Montserrat">
+                        Apply
+                      </p>
+                    </Col>
+                    <Col lg={24} sm={24} xs={24}>
+                      <p className="text-base font-semibold leading-3 text-black font-Montserrat">
+                        Banking
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <p className="text-sm font-Montserrat text-grey-70">
+                        Cologne, North Rhine-Westphalia, Germany
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={[16, 16]}>
+                        <Col lg={24}>
+                          <p className="text-base font-medium text-black font-Montserrat">
+                            $10,000 - $15,000
+                            <span className="pl-2 text-sm font-Montserrat text-grey-70">
+                              annually
+                            </span>
+                          </p>
+                        </Col>
+                        <Col lg={10}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            On-Site
+                          </Button>
+                        </Col>
+
+                        <Col lg={14}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            Apprenticeship
+                          </Button>
+                        </Col>
+
+                        <Col lg={20} className="pt-3">
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            3 weeks ago
+                          </p>
+                        </Col>
+
+                        <Col lg={2} className="pt-3">
+                          <Image src={bookmark1} alt="paris picture" />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+            </Row>
+          </Col>
+
+          <Col lg={6} sm={24} xs={24}>
+            <Row>
+              <Col lg={24}>
+                <Image src={google} alt="paris picture" />
+              </Col>
+
+              <Col lg={24} sm={23} xs={23}>
+                <Card className="-mt-20 leading-3 rounded-tr-2xl rounded-tl-2xl">
+                  <Row gutter={[16, 16]}>
+                    <Col lg={20}>
+                      <p className="text-base font-medium leading-3 text-black font-Montserrat">
+                        WHO studio
+                      </p>
+                    </Col>
+
+                    <Col lg={4}>
+                      <p className="text-base leading-3 text-green-600 font-Montserrat">
+                        Apply
+                      </p>
+                    </Col>
+                    <Col lg={24} sm={23} xs={23}>
+                      <p className="text-base font-semibold leading-3 text-black font-Montserrat">
+                        Banking
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <p className="text-sm font-Montserrat text-grey-70">
+                        Cologne, North Rhine-Westphalia, Germany
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={[16, 16]}>
+                        <Col lg={24}>
+                          <p className="text-base font-medium text-black font-Montserrat">
+                            $10,000 - $15,000
+                            <span className="pl-2 text-sm font-Montserrat text-grey-70">
+                              annually
+                            </span>
+                          </p>
+                        </Col>
+                        <Col lg={10}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            On-Site
+                          </Button>
+                        </Col>
+
+                        <Col lg={14}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            Apprenticeship
+                          </Button>
+                        </Col>
+
+                        <Col lg={20} className="pt-3">
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            3 weeks ago
+                          </p>
+                        </Col>
+
+                        <Col lg={2} className="pt-3">
+                          <Image src={bookmark1} alt="paris picture" />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+            </Row>
+          </Col>
+
+          <Col lg={6} sm={24} xs={24}>
+            <Row>
+              <Col lg={24}>
+                <Image src={macdonald} alt="paris picture" />
+              </Col>
+
+              <Col lg={24} sm={23} xs={23}>
+                <Card className="-mt-20 leading-3 rounded-tr-2xl rounded-tl-2xl">
+                  <Row gutter={[16, 16]}>
+                    <Col lg={20}>
+                      <p className="text-base font-medium leading-3 text-black font-Montserrat">
+                        WHO studio
+                      </p>
+                    </Col>
+
+                    <Col lg={4}>
+                      <p className="text-base leading-3 text-green-600 font-Montserrat">
+                        Apply
+                      </p>
+                    </Col>
+                    <Col lg={24} sm={24} xs={24}>
+                      <p className="text-base font-semibold leading-3 text-black font-Montserrat">
+                        Banking
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <p className="text-sm font-Montserrat text-grey-70">
+                        Cologne, North Rhine-Westphalia, Germany
+                      </p>
+                    </Col>
+
+                    <Col lg={24}>
+                      <Row gutter={[16, 16]}>
+                        <Col lg={24}>
+                          <p className="text-base font-medium text-black font-Montserrat">
+                            $10,000 - $15,000
+                            <span className="pl-2 text-sm font-Montserrat text-grey-70">
+                              annually
+                            </span>
+                          </p>
+                        </Col>
+                        <Col lg={10}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            On-Site
+                          </Button>
+                        </Col>
+
+                        <Col lg={14}>
+                          <Button
+                            className="text-purple-50 bg-purple-60 rounded-3xl"
+                            size="small"
+                          >
+                            Apprenticeship
+                          </Button>
+                        </Col>
+
+                        <Col lg={20} className="pt-3">
+                          <p className="text-sm font-Montserrat text-grey-70">
+                            3 weeks ago
+                          </p>
+                        </Col>
+
+                        <Col lg={2} className="pt-3">
+                          <Image src={bookmark1} alt="paris picture" />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+            </Row>
+          </Col> */}
+
+
+
+          nnnnnnnnn
+          **888*************************************************** nmn***************************
+          card 
+
+          
+
+            {/* {[...Array(16)].map((elementInArray, index) => (
+                <Col lg={6} key={index}>
+                  <Row gutter={[16, 16]}>
+                    <Col lg={24}>
+                      <Image src={google} alt="paris picture" />
+                    </Col>
+
+                    <Col lg={24}>
+                      <Card className="-mt-20 leading-3 rounded-tr-2xl rounded-tl-2xl">
+                        <Row gutter={[4, 16]}>
+                          <Col lg={20}>
+                            <p className="text-base font-medium leading-3 text-black font-Montserrat">
+                              WHO studio
+                            </p>
+                          </Col>
+
+                          <Col lg={4}>
+                            <p className="text-base leading-3 text-green-600 font-Montserrat">
+                              Apply
+                            </p>
+                          </Col>
+                          <Col lg={24}>
+                            <p className="text-base font-semibold leading-3 text-black font-Montserrat">
+                              Banking
+                            </p>
+                          </Col>
+
+                          <Col lg={24}>
+                            <p className="text-sm font-Montserrat text-grey-70">
+                              Cologne, North Rhine-Westphalia, Germany
+                            </p>
+                          </Col>
+
+                          <Col lg={24}>
+                            <Row gutter={16}>
+                              <Col lg={24}>
+                                <p className="text-base font-medium text-black font-Montserrat">
+                                  $10,000 - $15,000
+                                  <span className="pl-2 text-sm font-Montserrat text-grey-70">
+                                    annually
+                                  </span>
+                                </p>
+                              </Col>
+                              <Col lg={10}>
+                                <Button
+                                  className="text-purple-50 bg-purple-60 rounded-3xl"
+                                  size="small"
+                                >
+                                  On-Site
+                                </Button>
+                              </Col>
+
+                              <Col lg={14}>
+                                <Button
+                                  className="text-purple-50 bg-purple-60 rounded-3xl"
+                                  size="small"
+                                >
+                                  Apprenticeship
+                                </Button>
+                              </Col>
+
+                              <Col lg={20} className="pt-3">
+                                <p className="text-sm font-Montserrat text-grey-70">
+                                  3 weeks ago
+                                </p>
+                              </Col>
+
+                              <Col lg={2} className="pt-3">
+                                <Image src={bookmark1} alt="paris picture" />
+                              </Col>
+                            </Row>
+                          </Col>
+                        </Row>
+                      </Card>
+                    </Col>
+                  </Row>
+                </Col>
+              ))} */}

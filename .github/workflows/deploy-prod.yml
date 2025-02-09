@@ -1,0 +1,93 @@
+name: CI/CD for Unifaires to K8s
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it.
+      - name: Checkout production branch
+        uses: actions/checkout@main
+        with:
+          ref: 'production'
+
+      # Install doctl.
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Save DigitalOcean kubeconfig with short-lived credentials
+        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 1000 ${{ secrets.CLUSTER_NAME }}
+
+
+      # Fetch secrets from Kubernetes and export them as environment variables
+      - name: Pulling secrets from K8s
+        run: |
+          export PORT=$(kubectl get secret -n unifaires-prod unifaires-front-prod -o jsonpath="{.data.PORT}" | base64 --decode)
+          export NEXT_PUBLIC_WEB_URL=$(kubectl get secret -n unifaires-prod unifaires-front-prod -o jsonpath="{.data.NEXT_PUBLIC_WEB_URL}" | base64 --decode)
+          export NEXTAUTH_URL=$(kubectl get secret -n unifaires-prod unifaires-front-prod -o jsonpath="{.data.NEXTAUTH_URL}" | base64 --decode)
+          export NEXTAUTH_SECRET=$(kubectl get secret -n unifaires-prod unifaires-front-prod -o jsonpath="{.data.NEXTAUTH_SECRET}" | base64 --decode)
+          export NEXT_PUBLIC_API_URL=$(kubectl get secret -n unifaires-prod unifaires-front-prod -o jsonpath="{.data.NEXT_PUBLIC_API_URL}" | base64 --decode)
+          export NEXT_PUBLIC_API_URL2=$(kubectl get secret -n unifaires-prod unifaires-front-prod -o jsonpath="{.data.NEXT_PUBLIC_API_URL2}" | base64 --decode)
+          export NEXT_PUBLIC_API_DOCUMENTATION=$(kubectl get secret -n unifaires-prod unifaires-front-prod -o jsonpath="{.data.NEXT_PUBLIC_API_DOCUMENTATION}" | base64 --decode)
+          export NEXT_PUBLIC_HOME_URL=$(kubectl get secret -n unifaires-prod unifaires-front-prod -o jsonpath="{.data.NEXT_PUBLIC_HOME_URL}" | base64 --decode)
+          export NEXT_PUBLIC_GUIDE_VIDEO_LINK=$(kubectl get secret -n unifaires-prod unifaires-front-prod -o jsonpath="{.data.NEXT_PUBLIC_GUIDE_VIDEO_LINK}" | base64 --decode)
+          export JWT_KEY=$(kubectl get secret -n unifaires-prod unifaires-front-prod -o jsonpath="{.data.JWT_KEY}" | base64 --decode)
+          export JWT_SECRET=$(kubectl get secret -n unifaires-prod unifaires-front-prod -o jsonpath="{.data.JWT_SECRET}" | base64 --decode)
+          export NEXT_PUBLIC_SOCKET_URL=$(kubectl get secret -n unifaires-prod unifaires-front-prod -o jsonpath="{.data.NEXT_PUBLIC_SOCKET_URL}" | base64 --decode)
+
+          echo "PORT=$PORT" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL" >> $GITHUB_ENV
+          echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> $GITHUB_ENV
+          echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_API_URL2=$NEXT_PUBLIC_API_URL2" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_API_DOCUMENTATION=$NEXT_PUBLIC_API_DOCUMENTATION" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_HOME_URL=$NEXT_PUBLIC_HOME_URL" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_GUIDE_VIDEO_LINK=$NEXT_PUBLIC_GUIDE_VIDEO_LINK" >> $GITHUB_ENV
+          echo "JWT_KEY=$JWT_KEY" >> $GITHUB_ENV
+          echo "JWT_SECRET=$JWT_SECRET" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL" >> $GITHUB_ENV
+
+      # Build a Docker image of your application in your registry and tag the image with the $GITHUB_SHA.
+      - name: Build container image
+        # run: docker build -t ${{ secrets.REGISTRY_NAME }}/unifaires-front-prod:$(echo $GITHUB_SHA | head -c7) .
+        run: |
+          docker build \
+          --build-arg PORT=${{ env.PORT }} \
+          --build-arg NEXT_PUBLIC_WEB_URL=${{ env.NEXT_PUBLIC_WEB_URL }} \
+          --build-arg NEXTAUTH_URL=${{ env.NEXTAUTH_URL }} \
+          --build-arg NEXTAUTH_SECRET=${{ env.NEXTAUTH_SECRET }} \
+          --build-arg NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }} \
+          --build-arg NEXT_PUBLIC_API_URL2=${{ env.NEXT_PUBLIC_API_URL2 }} \
+          --build-arg NEXT_PUBLIC_API_DOCUMENTATION=${{ env.NEXT_PUBLIC_API_DOCUMENTATION }} \
+          --build-arg NEXT_PUBLIC_HOME_URL=${{ env.NEXT_PUBLIC_HOME_URL }} \
+          --build-arg NEXT_PUBLIC_GUIDE_VIDEO_LINK=${{ env.NEXT_PUBLIC_GUIDE_VIDEO_LINK }} \
+          --build-arg JWT_KEY=${{ env.JWT_KEY }} \
+          --build-arg JWT_SECRET=${{ env.JWT_SECRET }} \
+          --build-arg NEXT_PUBLIC_SOCKET_URL=${{ env.NEXT_PUBLIC_SOCKET_URL }} \
+          -t ${{ secrets.REGISTRY_NAME }}/unifaires-front-prod:$(echo $GITHUB_SHA | head -c7) .
+
+      # Login
+      - name: Log in to DigitalOcean Container Registry with short-lived credentials
+        run: doctl registry login --expiry-seconds 1200
+
+      # Push image to DO
+      - name: Push image to DigitalOcean Container Registry
+        run: docker push ${{ secrets.REGISTRY_NAME }}/unifaires-front-prod:$(echo $GITHUB_SHA | head -c7)
+
+      # Deploy to Digital Ocean Kubernetes.
+      - name: Update deployment file
+        run: TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ secrets.REGISTRY_NAME }}/unifaires-front-prod:'${TAG}'|' $GITHUB_WORKSPACE/k8s/deployment-prod.yaml
+
+      - name: Deploy to DigitalOcean Kubernetes
+        run: kubectl apply -f $GITHUB_WORKSPACE/k8s/deployment-prod.yaml
+
+      - name: Verify deployment
+        run: kubectl rollout status -n unifaires-prod deployment/unifaires-front-prod

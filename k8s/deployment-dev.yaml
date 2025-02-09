@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unifaires-front-dev
+  namespace: unifaires-dev
+  labels:
+    app: unifaires-front-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: unifaires-front-dev
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      namespace: unifaires-dev
+      labels:
+        app: unifaires-front-dev
+        app.kubernetes.io/name: unifaires-front-dev
+    spec:
+      containers:
+        - name: unifaires-front-dev
+          image: <IMAGE>
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXTAUTH_URL
+              valueFrom:
+                secretKeyRef:
+                  name: unifaires-front-dev
+                  key: NEXTAUTH_URL
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: unifaires-front-dev
+                  key: NEXTAUTH_SECRET
+            - name: NEXT_PUBLIC_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: unifaires-front-dev
+                  key: NEXT_PUBLIC_API_URL
+            - name: NEXT_PUBLIC_API_URL2
+              valueFrom:
+                secretKeyRef:
+                  name: unifaires-front-dev
+                  key: NEXT_PUBLIC_API_URL2
+            - name: NEXT_PUBLIC_API_DOCUMENTATION
+              valueFrom:
+                secretKeyRef:
+                  name: unifaires-front-dev
+                  key: NEXT_PUBLIC_API_DOCUMENTATION
+            - name: NEXT_PUBLIC_HOME_URL
+              valueFrom:
+                secretKeyRef:
+                  name: unifaires-front-dev
+                  key: NEXT_PUBLIC_HOME_URL
+            - name: NEXT_PUBLIC_GUIDE_VIDEO_LINK
+              valueFrom:
+                secretKeyRef:
+                  name: unifaires-front-dev
+                  key: NEXT_PUBLIC_GUIDE_VIDEO_LINK
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: unifaires-front-dev
+                  key: JWT_KEY
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: unifaires-front-dev
+                  key: JWT_SECRET
+            - name: NEXT_PUBLIC_SOCKET_URL
+              valueFrom:
+                secretKeyRef:
+                  name: unifaires-front-dev
+                  key: NEXT_PUBLIC_SOCKET_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: unifaires-front-dev-service
+  namespace: unifaires-dev
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 3000
+  selector:
+    app: unifaires-front-dev
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: unifaires-front-dev-ingress
+  namespace: unifaires-dev
+  annotations:
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://dev-front.tryunifaires.com"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type"
+spec:
+  rules:
+    - host: dev-front.tryunifaires.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: unifaires-front-dev-service
+                port:
+                  number: 80
