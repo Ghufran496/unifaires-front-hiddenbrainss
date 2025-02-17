@@ -78,7 +78,7 @@ const CoursePaymentModal = ({
       currency: "BRL",
     },
   };
-
+  console.log(ModalContent);
   console.log(session);
   const getTaxForCountry = (countryName: string) => {
     if (!taxes || !Array.isArray(taxes)) {
