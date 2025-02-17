@@ -19,6 +19,7 @@ import {
   UserOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
+import CoursePaymentModal from "./CoursePaymentModal";
 // app components
 import VideoJs from "@/components/shared/video/VideoJs";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -64,6 +65,7 @@ const DetailsCard = ({ course, userType }: any) => {
   const [switchAccount, setSwitchAccount] = useState(false);
   const [loading, setLoading] = useState(false);
   const [enrolLoading, setEnrolLoading] = useState(false);
+  const [isOpenPaymentModal, setIsOpenPaymentModal] = useState(false);
   const currentPath =
     typeof window !== "undefined" ? window.location.pathname : null;
   const propsString: any = params.get("props");
@@ -162,6 +164,17 @@ const DetailsCard = ({ course, userType }: any) => {
         type: "video/mp4",
       },
     ],
+  };
+
+  const ModalData = {
+    convertedPrice: convertedPrice,
+    salesPrice: salesPrice,
+    convertedAmount: convertedAmount,
+    amount: amount,
+    videoJsOptions: videoJsOptions,
+    course: course,
+    courseImage: courseImage,
+    videoUrl: videoUrl,
   };
 
   const closeModal = async () => {
@@ -346,9 +359,18 @@ const DetailsCard = ({ course, userType }: any) => {
               course?.pricing?.type === "paid" &&
               !courseAssociate &&
               !course.isAssociateFree ? (
+                // <Button
+                //   href={`/courses/course-checkout?courseId=${courseId}&totalPrice=${salesPrice}`}
+                //   // block
+                //   type="primary"
+                //   size="large"
+                //   className="flex justify-center items-center h-[50px]"
+                // >
+                //   Buy Now
+                // </Button>
                 <Button
-                  href={`/courses/course-checkout?courseId=${courseId}&totalPrice=${salesPrice}`}
                   // block
+                  onClick={() => setIsOpenPaymentModal(true)}
                   type="primary"
                   size="large"
                   className="flex justify-center items-center h-[50px]"
@@ -383,7 +405,9 @@ const DetailsCard = ({ course, userType }: any) => {
                     Buy Now
                   </Button>
                 </div>
-              ) : session && course?.isExternal ? (
+              ) : session &&
+                course?.isExternal &&
+                course?.externalUrl !== null ? (
                 <Link href={`/${course?.externalUrl}`} target="_blank">
                   <Button
                     block
@@ -498,6 +522,13 @@ const DetailsCard = ({ course, userType }: any) => {
           </div>
         </div>
       </Modal>
+      {isOpenPaymentModal && (
+        <CoursePaymentModal
+          isOpenPaymentModal={isOpenPaymentModal}
+          setIsOpenPaymentModal={setIsOpenPaymentModal}
+          ModalContent={ModalData}
+        />
+      )}
     </Card>
   );
 };
