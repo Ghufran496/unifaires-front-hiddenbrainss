@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 // next
 // import NextLink from "next/link";
 // antd and Icon components
@@ -36,10 +36,11 @@ import {
   cartCourses,
   fetchMyCourse,
 } from "@/redux/features/CoursesSlice";
-import { error } from "console";
 import { RootState } from "@/redux/store";
 import { getCookie } from "cookies-next";
 import { fetchAllTax } from "@/redux/features/TaxSlice";
+import axios from "axios";
+import config from "@/app/utils/config";
 
 const DetailsCard = ({ course, userType }: any) => {
   // const playerRef = React.useRef(null);
@@ -66,6 +67,9 @@ const DetailsCard = ({ course, userType }: any) => {
   const [loading, setLoading] = useState(false);
   const [enrolLoading, setEnrolLoading] = useState(false);
   const [isOpenPaymentModal, setIsOpenPaymentModal] = useState(false);
+  const [isCoursePaid, setIsCoursePaid] = useState(false); // State to track if the course is paid
+  // const isCoursePaid = useRef(false);
+  const [PurchasedCourses, setPurchasedCourses] = useState<string[]>([]); // State to store purchased courses
   const currentPath =
     typeof window !== "undefined" ? window.location.pathname : null;
   const propsString: any = params.get("props");
@@ -126,7 +130,6 @@ const DetailsCard = ({ course, userType }: any) => {
       maximumFractionDigits: 2,
     }).format(value);
   };
-  // console.log("here is ", currencyRate);
 
   const formattedDate = new Date(course?.updatedAt);
 
@@ -135,6 +138,9 @@ const DetailsCard = ({ course, userType }: any) => {
 
   useEffect(() => {
     dispatch(fetchMyCourse());
+    if (session?.user?.id && course?.id) {
+      fetchPurchasedCourses(session.user.id); // Fetch purchased courses for the user
+    }
     if (userType !== "business") {
       setSwitchAccount(false);
     }
@@ -248,6 +254,43 @@ const DetailsCard = ({ course, userType }: any) => {
     setEnrolLoading(false);
   };
 
+  const fetchPurchasedCourses = async (userId: any) => {
+    try {
+      // Make a GET request to the endpoint
+      const response = await axios.get(
+        `${config.API.API_URL}/payment/user/${userId}/purchased-courses`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-token": session?.user?.token, // Send auth token if needed
+          },
+        }
+      );
+
+      // Check if the request was successful
+      if (response.status === 200) {
+        setPurchasedCourses(response.data.data);
+
+        if (
+          response?.data?.data?.purchasedCourses.includes(String(course?.id))
+        ) {
+          setIsCoursePaid(true);
+        } else {
+          setIsCoursePaid(false);
+        }
+      } else {
+        console.error(
+          "Failed to fetch purchased courses:",
+          response.data.message
+        );
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching purchased courses:", error);
+      return [];
+    }
+  };
+
   return (
     <Card className="lg:-mt-64 shadow-sm sticky mb-6 top-0">
       <div>
@@ -359,24 +402,37 @@ const DetailsCard = ({ course, userType }: any) => {
               course?.pricing?.type === "paid" &&
               !courseAssociate &&
               !course.isAssociateFree ? (
-                // <Button
-                //   href={`/courses/course-checkout?courseId=${courseId}&totalPrice=${salesPrice}`}
-                //   // block
-                //   type="primary"
-                //   size="large"
-                //   className="flex justify-center items-center h-[50px]"
-                // >
-                //   Buy Now
-                // </Button>
-                <Button
-                  // block
-                  onClick={() => setIsOpenPaymentModal(true)}
-                  type="primary"
-                  size="large"
-                  className="flex justify-center items-center h-[50px]"
-                >
-                  Buy Now
-                </Button>
+                !isCoursePaid ? (
+                  <Button
+                    onClick={() => setIsOpenPaymentModal(true)}
+                    type="primary"
+                    size="large"
+                    className="flex justify-center items-center h-[50px]"
+                  >
+                    Buy Now
+                  </Button>
+                ) : (
+                  // Show "Enroll Now" button if the course is already paid
+                  <Button
+                    block
+                    type="primary"
+                    size="large"
+                    className="flex justify-center items-center h-[50px]"
+                    onClick={() => handleEnrolCourse(course?.id)}
+                    loading={enrolLoading}
+                  >
+                    Enroll Now
+                  </Button>
+                  // <Button
+                  //   // block
+                  //   onClick={() => setIsOpenPaymentModal(true)}
+                  //   type="primary"
+                  //   size="large"
+                  //   className="flex justify-center items-center h-[50px]"
+                  // >
+                  //   Buy Now
+                  // </Button>
+                )
               ) : session &&
                 userType === "user" &&
                 (course?.pricing?.type === "free" ||
@@ -529,6 +585,13 @@ const DetailsCard = ({ course, userType }: any) => {
           ModalContent={ModalData}
         />
       )}
+      {/* <div>
+        {isCoursePaid ? (
+          <p>This course is already paid. You can now enroll.</p>
+        ) : (
+          <p>Please complete the payment to enroll in this course.</p>
+        )}
+      </div> */}
     </Card>
   );
 };
