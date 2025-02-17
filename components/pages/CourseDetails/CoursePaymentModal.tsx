@@ -79,7 +79,7 @@ const CoursePaymentModal = ({
     },
   };
 
-  console.log(session)
+  console.log(session);
   const getTaxForCountry = (countryName: string) => {
     if (!taxes || !Array.isArray(taxes)) {
       return "N/A";
@@ -143,6 +143,7 @@ const CoursePaymentModal = ({
     setSelectedValue(value);
   };
 
+  console.log("ModalContent?.course?.id", ModalContent?.course?.id);
   const handlePaymentGateway = async () => {
     if (
       paymentGateways[selectedValue] &&
@@ -158,6 +159,8 @@ const CoursePaymentModal = ({
         currency: paymentGateways[selectedValue], // Ensure currency is passed
         user: session?.user,
         redirectUrl: currentPath,
+        courseId: ModalContent?.course?.id,
+        paymentSession: "payFunds",
       };
 
       console.log("Payment payload:", payload);
@@ -173,9 +176,9 @@ const CoursePaymentModal = ({
           }
         );
         console.log(response);
-        if (response?.data?.data?.url) {
-          window.location.href = response.data.data.url; // Redirect user to Stripe checkout
-        }
+        // if (response?.data?.data?.url) {
+        //   window.location.href = response.data.data.url; // Redirect user to Stripe checkout
+        // }
       } catch (error) {
         console.error("Error initiating payment:", error);
         message.error("Payment initiation failed. Please try again.");
@@ -185,6 +188,40 @@ const CoursePaymentModal = ({
     }
   };
 
+  // const fetchPurchasedCourses = async (userId: any) => {
+  //   try {
+  //     // Make a GET request to the endpoint
+  //     const response = await axios.get(
+  //       `${config.API.API_URL}/payment/user/${userId}/purchased-courses`,
+  //       {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           "x-token": session?.user?.token, // Send auth token if needed
+  //         },
+  //       }
+  //     );
+
+  //     console.log("Purchased courses:", response);
+  //     // Check if the request was successful
+  //     // if (response.data.success) {
+  //     //   // const purchasedCourses = response;
+  //     //   // console.log("Purchased courses:", purchasedCourses);
+  //     //   // return purchasedCourses; // Return the list of purchased courses
+  //     // } else {
+  //     //   console.error(
+  //     //     "Failed to fetch purchased courses:",
+  //     //     response.data.message
+  //     //   );
+  //     //   return []; // Return an empty array if the request fails
+  //     // }
+  //   } catch (error) {
+  //     console.error("Error fetching purchased courses:", error);
+  //     return []; // Return an empty array if an error occurs
+  //   }
+  // };
+
+  // const result = fetchPurchasedCourses(session?.user?.id);
+  // console.log("session", session);
   return (
     <Modal
       title={
