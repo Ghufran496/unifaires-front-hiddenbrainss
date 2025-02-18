@@ -291,6 +291,39 @@ const DetailsCard = ({ course, userType }: any) => {
     }
   };
 
+  const deletePurchasedCourse = async () => {
+    try {
+      // Make a GET request to the endpoint
+      const response = await axios.delete(
+        `${config.API.API_URL}/payment/user/${
+          session?.user?.id
+        }/purchased-courses/${"35fde214-fd57-4d72-b515-e3216be50534"}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-token": session?.user?.token, // Send auth token if needed
+          },
+        }
+      );
+
+      // Check if the request was successful
+      if (response.status === 200) {
+        console.log("Purchased Course Deleted", response.data);
+      } else {
+        console.error(
+          "Failed to delete purchased courses:",
+          response.data.message
+        );
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching purchased courses:", error);
+      return [];
+    }
+  };
+
+  // console.log("Purchased Courses", PurchasedCourses);
+
   return (
     <Card className="lg:-mt-64 shadow-sm sticky mb-6 top-0">
       <div>
@@ -585,6 +618,15 @@ const DetailsCard = ({ course, userType }: any) => {
           ModalContent={ModalData}
         />
       )}
+      <Button
+        block
+        type="primary"
+        size="large"
+        onClick={deletePurchasedCourse}
+        className="flex bg-transparent border-2 border-purple-600 text-black hover:bg-purple-600 hover:text-white font-semibold text-base justify-center items-center h-[50px]"
+      >
+        Delete Purchased course
+      </Button>
       {/* <div>
         {isCoursePaid ? (
           <p>This course is already paid. You can now enroll.</p>

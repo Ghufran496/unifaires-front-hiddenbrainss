@@ -143,29 +143,68 @@ const CoursePaymentModal = ({
     setSelectedValue(value);
   };
 
+  // console.log(paymentMethod);
   const handlePaymentGateway = async () => {
-    if (
-      paymentGateways[selectedValue] &&
-      paymentGateways[selectedValue][paymentMethod]
-    ) {
-      const selectedGateway = paymentGateways[selectedValue][paymentMethod];
+    if (paymentMethod === "wallet") {
+      HandlePaymentByWallet();
+    } else {
+      if (
+        paymentGateways[selectedValue] &&
+        paymentGateways[selectedValue][paymentMethod]
+      ) {
+        const selectedGateway = paymentGateways[selectedValue][paymentMethod];
 
-      const currentPath = window.location.pathname;
+        const currentPath = window.location.pathname;
+        const payload = {
+          selectedGateway,
+          paymentMethod: paymentMethod,
+          amount: finalPrice,
+          currency: paymentGateways[selectedValue], // Ensure currency is passed
+          user: session?.user,
+          redirectUrl: currentPath,
+          courseId: ModalContent?.course?.id,
+          paymentSession: "payFunds",
+        };
+
+        // console.log("Payment payload:", payload);
+        try {
+          const response = await axios.post(
+            `${config.API.API_URL}/payment/create-stripe-session`,
+            payload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                "x-token": session?.user?.token, // Send auth token if needed
+              },
+            }
+          );
+          if (response?.data?.data?.url) {
+            window.location.href = response.data.data.url; // Redirect user to Stripe checkout
+          }
+        } catch (error) {
+          console.error("Error initiating payment:", error);
+          message.error("Payment initiation failed. Please try again.");
+        }
+      } else {
+        message.error("Payment gateway not available for this combination.");
+      }
+    }
+  };
+
+  const HandlePaymentByWallet = async () => {
+    const userBalance = session?.user?.balance ?? 0;
+    const updatedAmount = userBalance - finalPrice;
+
+    if (updatedAmount >= 0) {
       const payload = {
-        selectedGateway,
-        paymentMethod: paymentMethod,
-        amount: finalPrice,
-        currency: paymentGateways[selectedValue], // Ensure currency is passed
-        user: session?.user,
-        redirectUrl: currentPath,
+        userId: session?.user?.id,
+        balance: updatedAmount,
         courseId: ModalContent?.course?.id,
-        paymentSession: "payFunds",
       };
-
-      console.log("Payment payload:", payload);
+      // console.log("Payment payload:", payload);
       try {
-        const response = await axios.post(
-          `${config.API.API_URL}/payment/create-stripe-session`,
+        const response = await axios.put(
+          `${config.API.API_URL}/users/update-balance-by-id`,
           payload,
           {
             headers: {
@@ -174,18 +213,13 @@ const CoursePaymentModal = ({
             },
           }
         );
-        if (response?.data?.data?.url) {
-          window.location.href = response.data.data.url; // Redirect user to Stripe checkout
-        }
+        console.log(response);
       } catch (error) {
-        console.error("Error initiating payment:", error);
-        message.error("Payment initiation failed. Please try again.");
+        console.error("Error updating payment:", error);
+        message.error("Transaction failed. Please try again.");
       }
-    } else {
-      message.error("Payment gateway not available for this combination.");
     }
   };
-
   return (
     <Modal
       title={
@@ -316,7 +350,7 @@ const CoursePaymentModal = ({
                     paymentMethod === "wallet" ? "text-black" : "text-gray-600"
                   }`}
                 >
-                  Wallet($25.00)
+                  Wallet({session?.user?.balance ?? "0"})
                 </span>
               </div>
             </Radio.Button>
@@ -453,7 +487,7 @@ const CoursePaymentModal = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between bg-slate-100 p-6 rounded-md">
               <p className="font-semibold">Available Balance</p>
-              <p className="font-semibold"> $25.00</p>
+              <p className="font-semibold"> ${session?.user?.balance ?? "0"}</p>
             </div>
 
             {/* Billing Address Section */}
@@ -489,7 +523,7 @@ const CoursePaymentModal = ({
                   </label>
                   <Input id="postalCode" placeholder="Postal Code" />
                 </div>
-                <div className="w-1/2">
+                {/* <div className="w-1/2">
                   <label htmlFor="country" className="block font-medium">
                     Country
                   </label>
@@ -510,9 +544,8 @@ const CoursePaymentModal = ({
                     </Select.Option>
                     <Select.Option value="Canada">Stripe Canada</Select.Option>
                     <Select.Option value="Brazil">Stripe Brazil</Select.Option>
-                    {/* Add more countries as needed */}
                   </Select>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
