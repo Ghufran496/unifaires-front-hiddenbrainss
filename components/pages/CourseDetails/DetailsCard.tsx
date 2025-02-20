@@ -291,13 +291,42 @@ const DetailsCard = ({ course, userType }: any) => {
     }
   };
 
+  // const deletePurchasedCourse = async () => {
+  //   try {
+  //     // Make a GET request to the endpoint
+  //     const response = await axios.delete(
+  //       `${config.API.API_URL}/payment/user/${
+  //         session?.user?.id
+  //       }/purchased-courses/${"35fde214-fd57-4d72-b515-e3216be50534"}`,
+  //       {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           "x-token": session?.user?.token, // Send auth token if needed
+  //         },
+  //       }
+  //     );
+
+  //     // Check if the request was successful
+  //     if (response.status === 200) {
+  //       console.log("Purchased Course Deleted", response.data);
+  //     } else {
+  //       console.error(
+  //         "Failed to delete purchased courses:",
+  //         response.data.message
+  //       );
+  //       return [];
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching purchased courses:", error);
+  //     return [];
+  //   }
+  // };
+
   const deletePurchasedCourse = async () => {
     try {
       // Make a GET request to the endpoint
-      const response = await axios.delete(
-        `${config.API.API_URL}/payment/user/${
-          session?.user?.id
-        }/purchased-courses/${"35fde214-fd57-4d72-b515-e3216be50534"}`,
+      const response = await axios.get(
+        `${config.API.API_URL}/payment/user/${session?.user?.id}/transaction-details`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -308,7 +337,7 @@ const DetailsCard = ({ course, userType }: any) => {
 
       // Check if the request was successful
       if (response.status === 200) {
-        console.log("Purchased Course Deleted", response.data);
+        console.log("Purchased Course Deleted", response.data, response);
       } else {
         console.error(
           "Failed to delete purchased courses:",

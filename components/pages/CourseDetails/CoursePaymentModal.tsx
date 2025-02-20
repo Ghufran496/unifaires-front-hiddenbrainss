@@ -22,13 +22,15 @@ import VideoJs from "@/components/shared/video/VideoJs";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { RootState } from "@/redux/store";
 import { getCookie } from "cookies-next";
-import { fetchCountries } from "@/redux/features/CountrySlice";
+import { country, fetchCountries } from "@/redux/features/CountrySlice";
 import {
   fetchBusinessDiscount,
   fetchCountryDiscount,
 } from "@/redux/features/DiscountSlice";
 import { fetchAllTax } from "@/redux/features/TaxSlice";
 import axios from "axios";
+import { paymentGateways, TransactionType, PaymentStatus } from "./dummyTypes";
+import { user } from "@/redux/features/UserSlice";
 
 interface CoursePaymentModalProps {
   isOpenPaymentModal: boolean;
@@ -54,32 +56,27 @@ const CoursePaymentModal = ({
   const selectedCurrency = getCookie("currency");
   const currency = selectedCurrency ? selectedCurrency : locationCurrency;
   const [selectedValue, setSelectedValue] = useState("USA");
+  const [billingAddress, setBillingAddress] = useState({
+    streetAddress: "",
+    city: "",
+    stateProvince: "",
+    postalCode: "",
+    country: selectedValue,
+  });
+  const isFormValid = Object.values(billingAddress).every(
+    (field) => field.trim() !== ""
+  );
 
-  const paymentGateways: any = {
-    Germany: {
-      card: "Stripe Germany",
-      bank: "Stripe Germany Bank",
-      currency: "EUR",
-    },
-    France: {
-      card: "Stripe France",
-      bank: "Stripe France Bank",
-      currency: "EUR",
-    },
-    USA: { card: "Stripe USA", bank: "Stripe USA Bank", currency: "USD" },
-    Canada: {
-      card: "Stripe Canada",
-      bank: "Stripe Canada Bank",
-      currency: "CAD",
-    },
-    Brazil: {
-      card: "Stripe Brazil",
-      bank: "Stripe Brazil Bank",
-      currency: "BRL",
-    },
-  };
   console.log(ModalContent);
   console.log(session);
+  // Handle input changes
+  const handleInputChange = (e: any) => {
+    const { id, value } = e.target;
+    setBillingAddress((prevState) => ({
+      ...prevState,
+      [id]: value,
+    }));
+  };
   const getTaxForCountry = (countryName: string) => {
     if (!taxes || !Array.isArray(taxes)) {
       return "N/A";
@@ -145,6 +142,13 @@ const CoursePaymentModal = ({
 
   // console.log(paymentMethod);
   const handlePaymentGateway = async () => {
+    const transactionDetails = {
+      userId: session?.user?.id,
+      billingAddress: billingAddress,
+      transactionAmount: finalPrice,
+      paymentStatus: PaymentStatus.PENDING,
+      transactionType: TransactionType.PAYFUNDS,
+    };
     if (paymentMethod === "wallet") {
       HandlePaymentByWallet();
     } else {
@@ -164,6 +168,7 @@ const CoursePaymentModal = ({
           redirectUrl: currentPath,
           courseId: ModalContent?.course?.id,
           paymentSession: "payFunds",
+          transactionDetails,
         };
 
         // console.log("Payment payload:", payload);
@@ -367,7 +372,12 @@ const CoursePaymentModal = ({
                 <label htmlFor="streetAddress" className="block font-medium">
                   Street Address
                 </label>
-                <Input id="streetAddress" placeholder="123 Main St" />
+                <Input
+                  id="streetAddress"
+                  placeholder="123 Main St"
+                  value={billingAddress.streetAddress}
+                  onChange={handleInputChange}
+                />
               </div>
 
               <div className="flex space-x-4 mb-4">
@@ -375,13 +385,23 @@ const CoursePaymentModal = ({
                   <label htmlFor="city" className="block font-medium">
                     City
                   </label>
-                  <Input id="city" placeholder="City" />
+                  <Input
+                    id="city"
+                    placeholder="City"
+                    value={billingAddress.city}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="w-1/2">
                   <label htmlFor="stateProvince" className="block font-medium">
                     State/Province
                   </label>
-                  <Input id="stateProvince" placeholder="State" />
+                  <Input
+                    id="stateProvince"
+                    placeholder="State"
+                    value={billingAddress.stateProvince}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
 
@@ -390,7 +410,13 @@ const CoursePaymentModal = ({
                   <label htmlFor="postalCode" className="block font-medium">
                     Postal Code
                   </label>
-                  <Input id="postalCode" placeholder="Postal Code" />
+                  <Input
+                    id="postalCode"
+                    placeholder="Postal Code"
+                    type="number"
+                    value={billingAddress.postalCode}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="w-1/2">
                   <label htmlFor="country" className="block font-medium">
@@ -431,7 +457,12 @@ const CoursePaymentModal = ({
                 <label htmlFor="streetAddress" className="block font-medium">
                   Street Address
                 </label>
-                <Input id="streetAddress" placeholder="123 Main St" />
+                <Input
+                  id="streetAddress"
+                  placeholder="123 Main St"
+                  value={billingAddress.streetAddress}
+                  onChange={handleInputChange}
+                />
               </div>
 
               <div className="flex space-x-4 mb-4">
@@ -439,13 +470,23 @@ const CoursePaymentModal = ({
                   <label htmlFor="city" className="block font-medium">
                     City
                   </label>
-                  <Input id="city" placeholder="City" />
+                  <Input
+                    id="city"
+                    placeholder="City"
+                    value={billingAddress.city}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="w-1/2">
                   <label htmlFor="stateProvince" className="block font-medium">
                     State/Province
                   </label>
-                  <Input id="stateProvince" placeholder="State" />
+                  <Input
+                    id="stateProvince"
+                    placeholder="State"
+                    value={billingAddress.stateProvince}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
 
@@ -454,7 +495,13 @@ const CoursePaymentModal = ({
                   <label htmlFor="postalCode" className="block font-medium">
                     Postal Code
                   </label>
-                  <Input id="postalCode" placeholder="Postal Code" />
+                  <Input
+                    id="postalCode"
+                    placeholder="Postal Code"
+                    type="number"
+                    value={billingAddress.postalCode}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="w-1/2">
                   <label htmlFor="country" className="block font-medium">
@@ -498,7 +545,12 @@ const CoursePaymentModal = ({
                 <label htmlFor="streetAddress" className="block font-medium">
                   Street Address
                 </label>
-                <Input id="streetAddress" placeholder="123 Main St" />
+                <Input
+                  id="streetAddress"
+                  placeholder="123 Main St"
+                  value={billingAddress.streetAddress}
+                  onChange={handleInputChange}
+                />
               </div>
 
               <div className="flex space-x-4 mb-4">
@@ -506,13 +558,23 @@ const CoursePaymentModal = ({
                   <label htmlFor="city" className="block font-medium">
                     City
                   </label>
-                  <Input id="city" placeholder="City" />
+                  <Input
+                    id="city"
+                    placeholder="City"
+                    value={billingAddress.city}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="w-1/2">
                   <label htmlFor="stateProvince" className="block font-medium">
                     State/Province
                   </label>
-                  <Input id="stateProvince" placeholder="State" />
+                  <Input
+                    id="stateProvince"
+                    placeholder="State"
+                    value={billingAddress.stateProvince}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
 
@@ -521,31 +583,14 @@ const CoursePaymentModal = ({
                   <label htmlFor="postalCode" className="block font-medium">
                     Postal Code
                   </label>
-                  <Input id="postalCode" placeholder="Postal Code" />
+                  <Input
+                    id="postalCode"
+                    type="number"
+                    placeholder="Postal Code"
+                    value={billingAddress.postalCode}
+                    onChange={handleInputChange}
+                  />
                 </div>
-                {/* <div className="w-1/2">
-                  <label htmlFor="country" className="block font-medium">
-                    Country
-                  </label>
-                  <Select
-                    id="country"
-                    defaultValue="United States"
-                    className="w-full"
-                  >
-                    <Select.Option value="Nigeria">
-                      Flutterwave Nigeria
-                    </Select.Option>
-                    <Select.Option value="Germany">
-                      Stripe Germany
-                    </Select.Option>
-                    <Select.Option value="France">Stripe France</Select.Option>
-                    <Select.Option value="United States">
-                      Stripe USA
-                    </Select.Option>
-                    <Select.Option value="Canada">Stripe Canada</Select.Option>
-                    <Select.Option value="Brazil">Stripe Brazil</Select.Option>
-                  </Select>
-                </div> */}
               </div>
             </div>
           </div>
@@ -628,8 +673,13 @@ const CoursePaymentModal = ({
 
         <Button
           type="primary"
-          className="w-full h-12 mt-4 bg-purple-600 text-white"
-          onClick={() => handlePaymentGateway()}
+          className={`w-full h-12 mt-4 ${
+            isFormValid
+              ? "bg-purple-600 text-white"
+              : "bg-gray-400 text-gray-700 cursor-not-allowed"
+          }`}
+          disabled={!isFormValid}
+          onClick={handlePaymentGateway}
         >
           Complete Purchase
         </Button>
