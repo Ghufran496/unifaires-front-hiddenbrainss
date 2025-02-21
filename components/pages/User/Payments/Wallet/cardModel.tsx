@@ -1,36 +1,23 @@
 import {
   Modal,
   Button,
-  Radio,
   Input,
   Select,
   Typography,
   Divider,
-  Collapse,
   message,
 } from "antd";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useSession } from "next-auth/react";
 import config from "@/app/utils/config";
-import {
-  BankOutlined,
-  CreditCardOutlined,
-  WalletOutlined,
-} from "@ant-design/icons";
-import VideoJs from "@/components/shared/video/VideoJs";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { RootState } from "@/redux/store";
 import { getCookie } from "cookies-next";
-import { fetchCountries } from "@/redux/features/CountrySlice";
-import {
-  fetchBusinessDiscount,
-  fetchCountryDiscount,
-} from "@/redux/features/DiscountSlice";
-import { fetchAllTax } from "@/redux/features/TaxSlice";
 import axios from "axios";
-import { course } from "@/redux/features/CoursesSlice";
-import { user } from "@/redux/features/UserSlice";
+import {
+  PaymentStatus,
+  TransactionType,
+} from "@/components/pages/CourseDetails/dummyTypes";
 
 interface CardModalProps {
   isOpenPaymentModal: boolean;
@@ -45,18 +32,19 @@ const CardModal = ({
 }: CardModalProps) => {
   const [paymentMethod, setPaymentMethod] = useState("card");
   const { data: session, status, update: sessionUpdate } = useSession();
-  const dispatch: any = useAppDispatch();
-  const businessId: any = session?.user.id;
   const cookies = getCookie("ipInfo");
   const info = typeof cookies === "string" && JSON.parse(cookies);
-  const locationData = info && info.data;
-  const userCountry = locationData && locationData?.country;
-  const taxes = useAppSelector((state: RootState) => state.tax.taxes);
   const locationCurrency = info && info.data.currency;
   const selectedCurrency = getCookie("currency");
   const currency = selectedCurrency ? selectedCurrency : locationCurrency;
   const [selectedValue, setSelectedValue] = useState("USA");
-  console.log(ModalContent);
+  const [billingAddress, setBillingAddress] = useState({
+    streetAddress: "",
+    city: "",
+    stateProvince: "",
+    postalCode: "",
+    country: selectedValue,
+  });
   const paymentGateways: any = {
     Germany: {
       card: "Stripe Germany",
@@ -95,16 +83,19 @@ const CardModal = ({
   };
   const finalAmount = ModalContent.Price;
 
-  const handlePaymentChange = (e: any) => {
-    setPaymentMethod(e.target.value);
-  };
 
   const handleChange = (value: any) => {
     setSelectedValue(value);
   };
   const userid = session?.user.id;
-  console.log("userid", userid);
   const handlePaymentGateway = async () => {
+    const transactionDetails = {
+      userId: session?.user?.id,
+      billingAddress: billingAddress,
+      transactionAmount: finalAmount,
+      paymentStatus: PaymentStatus.PENDING,
+      transactionType: TransactionType.ADDFUNDS,
+    };
     if (
       paymentGateways[selectedValue] &&
       paymentGateways[selectedValue][paymentMethod]
@@ -122,9 +113,9 @@ const CardModal = ({
         courseId: 1,
         paymentSession: "addFunds",
         user_Id: userid,
+        transactionDetails: transactionDetails,
       };
 
-      console.log("Payment payload:", payload);
       try {
         const response = await axios.post(
           `${config.API.API_URL}/payment/create-stripe-session`,
@@ -136,7 +127,6 @@ const CardModal = ({
             },
           }
         );
-        console.log(response);
         if (response?.data?.data?.url) {
           window.location.href = response.data.data.url; // Redirect user to Stripe checkout
         }
@@ -153,6 +143,19 @@ const CardModal = ({
       sessionUpdate(); // Refresh session data when modal is closed
     }
   }, [isOpenPaymentModal, sessionUpdate]);
+
+  const isFormValid = Object.values(billingAddress).every(
+    (field) => field.trim() !== ""
+  );
+
+  const handleInputChange = (e: any) => {
+    const { id, value } = e.target;
+    setBillingAddress((prevState) => ({
+      ...prevState,
+      [id]: value,
+    }));
+  };
+
   return (
     <Modal
       title={
@@ -177,7 +180,12 @@ const CardModal = ({
             <label htmlFor="streetAddress" className="block font-medium">
               Street Address
             </label>
-            <Input id="streetAddress" placeholder="123 Main St" />
+            <Input
+              id="streetAddress"
+              placeholder="123 Main St"
+              value={billingAddress.streetAddress}
+              onChange={handleInputChange}
+            />
           </div>
 
           <div className="flex space-x-4 mb-4">
@@ -185,13 +193,23 @@ const CardModal = ({
               <label htmlFor="city" className="block font-medium">
                 City
               </label>
-              <Input id="city" placeholder="City" />
+              <Input
+                id="city"
+                placeholder="City"
+                value={billingAddress.city}
+                onChange={handleInputChange}
+              />
             </div>
             <div className="w-1/2">
               <label htmlFor="stateProvince" className="block font-medium">
                 State/Province
               </label>
-              <Input id="stateProvince" placeholder="State" />
+              <Input
+                id="stateProvince"
+                placeholder="State"
+                value={billingAddress.stateProvince}
+                onChange={handleInputChange}
+              />
             </div>
           </div>
 
@@ -200,7 +218,13 @@ const CardModal = ({
               <label htmlFor="postalCode" className="block font-medium">
                 Postal Code
               </label>
-              <Input id="postalCode" placeholder="Postal Code" />
+              <Input
+                id="postalCode"
+                placeholder="Postal Code"
+                type="number"
+                value={billingAddress.postalCode}
+                onChange={handleInputChange}
+              />
             </div>
             <div className="w-1/2">
               <label htmlFor="country" className="block font-medium">
@@ -241,7 +265,12 @@ const CardModal = ({
 
         <Button
           type="primary"
-          className="w-full h-12 mt-4 bg-purple-600 text-white"
+          className={`w-full h-12 mt-4 ${
+            isFormValid
+              ? "bg-purple-600 text-white"
+              : "bg-gray-400 text-gray-700 cursor-not-allowed"
+          }`}
+          disabled={!isFormValid}
           onClick={() => handlePaymentGateway()}
         >
           Complete Purchase

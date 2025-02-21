@@ -2,15 +2,11 @@
 import {
   fetchUserCard,
   fetchWalletBalance,
-  user,
 } from "@/redux/features/UserSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
-  ArrowLeftOutlined,
   CopyOutlined,
   LeftOutlined,
-  PhoneOutlined,
-  PlusCircleOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -35,19 +31,23 @@ import { useSession } from "next-auth/react";
 import { handleAxiosError, showSuccess } from "@/app/utils/axiosError";
 import { RootState } from "@/redux/store";
 import { getCookie } from "cookies-next";
-import { TRACE_OUTPUT_VERSION } from "next/dist/shared/lib/constants";
 import BankModal from "./bankModel";
-import Pricing from "@/app/pricing/page";
 import CardModal from "./cardModel";
 import SendMoneyModal from "./sendMoneyModel";
-import { send } from "process";
+import axios from "axios";
+import config from "@/app/utils/config";
+import {
+  PaymentStatus,
+  TransactionResponse,
+  TransactionType,
+} from "@/components/pages/CourseDetails/dummyTypes";
 
 const UserWallet = () => {
   const [form] = Form.useForm();
   const [fundAmount] = Form.useForm();
   const { data: session, update: sessionUpdate } = useSession();
   const sessionWalletBalance: any = session && session?.user.balance;
-  const virtualAccount = session && session?.user.virtualAccount; // console.log(session?.user);
+  const virtualAccount = session && session?.user.virtualAccount;
   const accountNumberRef: any = useRef();
   const [authorizeLoading, setAuthorizeLoading] = useState(false);
   const dispatch: any = useAppDispatch();
@@ -68,8 +68,6 @@ const UserWallet = () => {
   const customerCard = useAppSelector((state: any) => state.user.myCards);
   const cookies = getCookie("ipInfo");
   const info = typeof cookies === "string" && JSON.parse(cookies);
-  const locationData = info && info.data;
-  const userCountry = locationData && locationData?.country;
   const locationCurrency = info && info.data.currency;
   const selectedCurrency = getCookie("currency");
   const currency = selectedCurrency ? selectedCurrency : locationCurrency;
@@ -82,6 +80,9 @@ const UserWallet = () => {
   const [isSendMoneyModalOpen, setIsSendMoneyModalOpen] = useState(false);
   const [SendButtonDisable, setSendButtonDisable] = useState(false);
 
+  const [transactionDetails, setTransactionDetails] = useState<
+    TransactionResponse[]
+  >([]);
   const handleOpenSendMoneyModal = () => {
     setIsSendMoneyModalOpen(true);
   };
@@ -100,11 +101,9 @@ const UserWallet = () => {
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPrice(parseFloat(e.target.value));
-    console.log("price", price);
   };
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
-    console.log("price", email);
   };
 
   const handleCloseBankModal = () => {
@@ -150,18 +149,22 @@ const UserWallet = () => {
     : parseFloat(sessionWalletBalance);
 
   const handleSendAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSendAmount(parseFloat(e.target.value));
-    console.log("price", sendAmount);
+    const value = parseFloat(e.target.value);
+    setSendAmount(isNaN(value) ? null : value);
   };
   useEffect(() => {
-    if (sessionWalletBalance < (sendAmount ?? 0)) {
+    if (
+      sessionWalletBalance < (sendAmount ?? 0) ||
+      !email ||
+      email.length === 0 ||
+      (sendAmount ?? 0) <= 0
+    ) {
       setSendButtonDisable(true);
     } else {
       setSendButtonDisable(false);
     }
-  }, [sendAmount, sessionWalletBalance]);
+  }, [sendAmount, sessionWalletBalance, email]);
 
-  // console.log("here is the virtual account balance", myBalance);
   const currencyRate = useAppSelector(
     (state: RootState) => state.currency.currencyRate
   );
@@ -239,8 +242,39 @@ const UserWallet = () => {
     }
   };
 
+  useEffect(() => {
+    fetchTranscationDetails();
+  }, []);
+
+  const fetchTranscationDetails = async () => {
+    try {
+      const response = await axios.get(
+        `${config.API.API_URL}/payment/user/${session?.user?.id}/transaction-details`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-token": session?.user?.token, 
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setTransactionDetails(response.data.data.transactionDetails);
+        console.log(
+          "Transaction Details fetched",
+          response.data.data.transactionDetails
+        );
+      } else {
+        console.error("Failed to Transaction Details", response.data.message);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching Transaction Details", error);
+      return [];
+    }
+  };
+
   const handleCopy = () => {
-    console.log();
     // Text you want to copy
     const textToCopy = accountNumberRef.current.innerHTML;
     // Create a temporary textarea element
@@ -306,6 +340,21 @@ const UserWallet = () => {
       setAuthorizeLoading(false);
     }
   }
+
+  const transactionStatusColors = {
+    pending: "bg-yellow-100 text-yellow-600",
+    success: "bg-green-100 text-green-600",
+    failed: "bg-red-100 text-red-600",
+    expired: "bg-gray-200 text-gray-600",
+  };
+
+  const transactionTypeIcons = {
+    payfunds: "lucide-arrow-up-right text-green-600",
+    addfunds: "lucide-plus text-blue-600",
+    sendfunds: "lucide-arrow-up-right text-purple-600",
+    withdrawfunds: "lucide-minus text-red-600",
+    transferfunds: "lucide-repeat text-orange-600",
+  };
 
   return (
     <div>
@@ -482,58 +531,25 @@ const UserWallet = () => {
                 className="lucide lucide-download w-4 h-4"
               >
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
+                <polyline points="7 10 12 15 17 10" />
                 <line x1="12" x2="12" y1="15" y2="3"></line>
               </svg>
               <span>Export</span>
             </button>
           </div>
           <div className="space-y-4">
-            {/* Transaction 1 */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    className="lucide lucide-arrow-up-right w-5 h-5 text-green-600"
+            {transactionDetails.map((transaction) => (
+              <div
+                key={transaction.id}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center space-x-4">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      transactionStatusColors[transaction.paymentStatus]
+                    }`}
                   >
-                    <path d="M7 7h10v10"></path>
-                    <path d="M7 17 17 7"></path>
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">
-                    Content engagement rewards
-                  </p>
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className="lucide lucide-clock w-4 h-4"
-                    >
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <span>20/02/2024</span>
-                    <span className="px-2 py-0.5 bg-gray-200 rounded-full text-xs">
-                      Engagement
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full text-xs flex items-center space-x-1 bg-green-100 text-green-600">
+                    {transaction.transactionType === "addfunds" && (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="24"
@@ -541,69 +557,18 @@ const UserWallet = () => {
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        className="lucide lucide-check-circle w-4 h-4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`lucide ${
+                          transactionTypeIcons[transaction.transactionType]
+                        } w-5 h-5`}
                       >
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <path d="m9 11 3 3L22 4"></path>
+                        <path d="M5 12h14"></path>
+                        <path d="M12 5v14"></path>
                       </svg>
-                      <span>success</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className="font-medium text-green-600">+$250.00</span>
-              </div>
-            </div>
-
-            {/* Transaction 2 */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    className="lucide lucide-plus w-5 h-5 text-purple-600"
-                  >
-                    <path d="M5 12h14"></path>
-                    <path d="M12 5v14"></path>
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">
-                    Monthly Pro Subscription
-                  </p>
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className="lucide lucide-clock w-4 h-4"
-                    >
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <span>19/02/2024</span>
-                    <span className="px-2 py-0.5 bg-gray-200 rounded-full text-xs">
-                      Subscription
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full text-xs flex items-center space-x-1 bg-red-100 text-red-600">
+                    )}
+                    {transaction.transactionType !== "addfunds" && (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="24"
@@ -614,26 +579,93 @@ const UserWallet = () => {
                         stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        className="lucide lucide-xcircle w-4 h-4"
+                        className={`lucide ${
+                          transactionTypeIcons[transaction.transactionType]
+                        } w-5 h-5`}
+                      >
+                        <path d="m22 2-7 20-4-9-9-4Z"></path>
+                        <path d="M22 2 11 13"></path>
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800">
+                      {transaction.transactionType
+                        .replace(/([A-Z])/g, " $1")
+                        .toUpperCase()}
+                    </p>
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide lucide-clock w-4 h-4"
                       >
                         <circle cx="12" cy="12" r="10"></circle>
-                        <path d="m15 9-6 6"></path>
-                        <path d="m9 9 6 6"></path>
+                        <polyline points="12 6 12 12 16 14"></polyline>
                       </svg>
-                      <span>failed</span>
-                    </span>
+                      <span>
+                        {new Date(transaction.createdAt).toLocaleDateString()}
+                      </span>
+                      <span className="px-2 py-0.5 bg-gray-200 rounded-full text-xs">
+                        {transaction.billingAddress.country}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs flex items-center space-x-1 ${
+                          transactionStatusColors[transaction.paymentStatus]
+                        }`}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="lucide w-4 h-4"
+                        >
+                          {transaction.paymentStatus === "success" ? (
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                          ) : transaction.paymentStatus === "failed" ? (
+                            <path d="M15 9l-6 6"></path>
+                          ) : (
+                            <circle cx="12" cy="12" r="10"></circle>
+                          )}
+                        </svg>
+                        <span>{transaction.paymentStatus}</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
+                <div className="flex items-center space-x-4">
+                  <span
+                    className={
+                      transaction.transactionType === "withdrawfunds" ||
+                      transaction.transactionType === "payfunds" ||
+                      transaction.transactionType === "sendfunds"
+                        ? "font-medium text-red-600"
+                        : "font-medium text-green-600"
+                    }
+                  >
+                    {transaction.transactionType === "withdrawfunds" ||
+                    transaction.transactionType === "payfunds" ||
+                    transaction.transactionType === "sendfunds"
+                      ? "-"
+                      : "+"}
+                    ${transaction.transactionAmount}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center space-x-4">
-                <span className="font-medium text-purple-600">+$19.99</span>
-                <button className="text-purple-600 hover:text-purple-700 text-sm font-medium">
-                  Retry
-                </button>
-              </div>
-            </div>
-
-            {/* Add other transaction cards here */}
+            ))}
           </div>
         </div>
       )}
@@ -733,7 +765,11 @@ const UserWallet = () => {
           </div>
 
           <button
-            className="w-full py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700"
+            className={`w-full h-12 mt-4 rounded-lg transition-colors ${
+              SendButtonDisable
+                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                : "bg-purple-600 text-white hover:bg-purple-700"
+            }`}
             onClick={handleOpenSendMoneyModal}
             disabled={SendButtonDisable}
           >
@@ -809,8 +845,13 @@ const UserWallet = () => {
                 2-3 business days • No fee
               </p>
               <button
-                className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                className={`w-full h-12 mt-4 ${
+                  price && price > 0
+                    ? "w-full h-12 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    : "w-full h-12 bg-gray-400 text-gray-700 cursor-not-allowed rounded-lg"
+                }`}
                 onClick={handleOpenBankModal}
+                disabled={price && price > 0 ? false : true}
               >
                 Add from Bank
               </button>
@@ -840,8 +881,13 @@ const UserWallet = () => {
                 Instant • 2.9% + $0.30 fee
               </p>
               <button
-                className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                className={`w-full h-12 mt-4 ${
+                  price && price > 0
+                    ? "w-full h-12 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    : "w-full h-12 bg-gray-400 text-gray-700 cursor-not-allowed rounded-lg"
+                }`}
                 onClick={handleOpenCardModal}
+                disabled={price && price > 0 ? false : true}
               >
                 Add with Card
               </button>
