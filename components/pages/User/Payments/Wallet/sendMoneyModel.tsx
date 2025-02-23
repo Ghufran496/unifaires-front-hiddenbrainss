@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import config from "@/app/utils/config";
 import { useSession } from "next-auth/react";
 interface SendMoneyModalProps {
-  isOpenPaymentModal: boolean;
-  setIsOpenPaymentModal: (isOpen: boolean) => void;
+  isSendMoneyModalOpen: boolean;
+  handleCloseSendMoneyModal: (isOpen: boolean) => void;
   ModalContent: any;
 }
 
 const SendMoneyModal = ({
-  isOpenPaymentModal,
-  setIsOpenPaymentModal,
+  handleCloseSendMoneyModal,
+  isSendMoneyModalOpen,
   ModalContent,
 }: SendMoneyModalProps) => {
   const { data: session, status, update: sessionUpdate } = useSession();
@@ -19,12 +19,12 @@ const SendMoneyModal = ({
   const handleYesClick = () => {
     // Handle the logic for sending money
     console.log("Money sent");
-    setIsOpenPaymentModal(false);
+    handleCloseSendMoneyModal(false);
   };
   console.log(ModalContent);
 
   const handleNoClick = () => {
-    setIsOpenPaymentModal(false);
+    handleCloseSendMoneyModal(false);
   };
 
   const handlePaymentGateway = async () => {
@@ -46,22 +46,18 @@ const SendMoneyModal = ({
           },
         }
       );
+
+      if (response.status === 200) {
+        handleYesClick();
+        message.success("Transfer success to the provided gmail account.");
+        location.reload();
+      }
       console.log(response);
     } catch (error) {
       console.error("Error initiating payment:", error);
       message.error("Payment initiation failed. Please try again.");
     }
   };
-  useEffect(() => {
-    if (!isOpenPaymentModal) {
-      sessionUpdate(); // Refresh session data when modal is closed
-    }
-  }, [isOpenPaymentModal, sessionUpdate]);
-  useEffect(() => {
-    if (!isOpenPaymentModal) {
-      sessionUpdate(); // Refresh session data when modal is closed
-    }
-  }, [isOpenPaymentModal, sessionUpdate]);
 
   return (
     <Modal
@@ -70,8 +66,8 @@ const SendMoneyModal = ({
           Confirm Action
         </span>
       }
-      visible={isOpenPaymentModal}
-      onCancel={() => setIsOpenPaymentModal(false)}
+      visible={isSendMoneyModalOpen}
+      onCancel={() => handleCloseSendMoneyModal(false)}
       footer={null}
       width={600}
     >

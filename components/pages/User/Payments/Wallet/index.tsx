@@ -1,13 +1,7 @@
 "use client";
-import {
-  fetchUserCard,
-  fetchWalletBalance,
-} from "@/redux/features/UserSlice";
+import { fetchUserCard, fetchWalletBalance } from "@/redux/features/UserSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import {
-  CopyOutlined,
-  LeftOutlined,
-} from "@ant-design/icons";
+import { CopyOutlined, LeftOutlined } from "@ant-design/icons";
 import {
   Button,
   Card,
@@ -20,14 +14,14 @@ import {
 } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { BsPhone, BsPin, BsTv } from "react-icons/bs";
-import { GiAerialSignal, GiElectric, GiNetworkBars } from "react-icons/gi";
+import { GiAerialSignal, GiElectric } from "react-icons/gi";
 import { toast } from "react-toastify";
 import unifairesReload from "@/public/images/unifairesReload.png";
 import AddCard from "../AddCard";
 import { fetchAirtimeBillers } from "@/redux/features/BillsSlice";
 import axiosInstance from "@/app/utils/axios-config";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { handleAxiosError, showSuccess } from "@/app/utils/axiosError";
 import { RootState } from "@/redux/store";
 import { getCookie } from "cookies-next";
@@ -36,11 +30,7 @@ import CardModal from "./cardModel";
 import SendMoneyModal from "./sendMoneyModel";
 import axios from "axios";
 import config from "@/app/utils/config";
-import {
-  PaymentStatus,
-  TransactionResponse,
-  TransactionType,
-} from "@/components/pages/CourseDetails/dummyTypes";
+import { TransactionResponse } from "@/components/pages/CourseDetails/dummyTypes";
 
 const UserWallet = () => {
   const [form] = Form.useForm();
@@ -63,6 +53,7 @@ const UserWallet = () => {
   const [buyElectricity, setBuyElectricity] = useState(false);
   const [examPin, setExamPin] = useState(false);
   const [cable, setCable] = useState(false);
+
   const [bvn, setBvn] = useState<any>();
   const myProfile = useAppSelector((state: any) => state.user.myProfile);
   const customerCard = useAppSelector((state: any) => state.user.myCards);
@@ -83,6 +74,8 @@ const UserWallet = () => {
   const [transactionDetails, setTransactionDetails] = useState<
     TransactionResponse[]
   >([]);
+  const [userBalance, setUserBalance] = useState();
+
   const handleOpenSendMoneyModal = () => {
     setIsSendMoneyModalOpen(true);
   };
@@ -143,10 +136,6 @@ const UserWallet = () => {
     amount: sendAmount,
     email: email,
   };
-
-  const walletBalance = myBalance
-    ? parseFloat(myBalance)
-    : parseFloat(sessionWalletBalance);
 
   const handleSendAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
@@ -244,6 +233,7 @@ const UserWallet = () => {
 
   useEffect(() => {
     fetchTranscationDetails();
+    fetchUserById();
   }, []);
 
   const fetchTranscationDetails = async () => {
@@ -253,17 +243,50 @@ const UserWallet = () => {
         {
           headers: {
             "Content-Type": "application/json",
-            "x-token": session?.user?.token, 
+            "x-token": session?.user?.token,
           },
         }
       );
 
       if (response.status === 200) {
-        setTransactionDetails(response.data.data.transactionDetails);
+        const sortedTransactions = response.data.data.transactionDetails.sort(
+          (a: TransactionResponse, b: TransactionResponse) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        setTransactionDetails(sortedTransactions);
+        fetchUserById();
         console.log(
           "Transaction Details fetched",
           response.data.data.transactionDetails
         );
+      } else {
+        console.error("Failed to Transaction Details", response.data.message);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching Transaction Details", error);
+      return [];
+    }
+  };
+
+  const fetchUserById = async () => {
+    try {
+      const response = await axios.get(
+        `${config.API.API_URL}/users/${session?.user?.id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-token": session?.user?.token,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setUserBalance(
+          response?.data?.data?.balance >= 0 ? response?.data?.data?.balance : 0
+        );
+        console.log("user balance fetched", response.data.data.balance);
       } else {
         console.error("Failed to Transaction Details", response.data.message);
         return [];
@@ -388,7 +411,7 @@ const UserWallet = () => {
         <div className="flex justify-between items-center mb-4">
           <div>
             <p className="text-white/80 mb-1">Available Balance</p>
-            <p className="text-3xl font-bold">${walletBalance}</p>
+            <p className="text-3xl font-bold">${userBalance}</p>
           </div>
           <div className="text-right">
             <p className="text-white/80 mb-1">Wallet ID</p>
@@ -613,9 +636,9 @@ const UserWallet = () => {
                       <span>
                         {new Date(transaction.createdAt).toLocaleDateString()}
                       </span>
-                      <span className="px-2 py-0.5 bg-gray-200 rounded-full text-xs">
+                      {/* <span className="px-2 py-0.5 bg-gray-200 rounded-full text-xs">
                         {transaction.billingAddress.country}
-                      </span>
+                      </span> */}
                       <span
                         className={`px-2 py-0.5 rounded-full text-xs flex items-center space-x-1 ${
                           transactionStatusColors[transaction.paymentStatus]
@@ -751,15 +774,17 @@ const UserWallet = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Amount</span>
-                <span>$3455.00</span>
+                <span>${sendAmount ?? 0}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Fee (2.5% fee for African transfers)</span>
-                <span>$25.00</span>
+                <span>${((sendAmount ?? 0) * 2.5) / 100}</span>
               </div>
               <div className="flex justify-between font-medium text-lg pt-2 border-t border-gray-200">
                 <span>Total</span>
-                <span>$3480.00</span>
+                <span>
+                  ${((sendAmount ?? 0) * 2.5) / 100 + (sendAmount ?? 0)}
+                </span>
               </div>
             </div>
           </div>
@@ -780,8 +805,8 @@ const UserWallet = () => {
 
       {isSendMoneyModalOpen && (
         <SendMoneyModal
-          isOpenPaymentModal={isSendMoneyModalOpen}
-          setIsOpenPaymentModal={handleCloseSendMoneyModal}
+          isSendMoneyModalOpen={isSendMoneyModalOpen}
+          handleCloseSendMoneyModal={handleCloseSendMoneyModal}
           ModalContent={sendModelData}
         />
       )}

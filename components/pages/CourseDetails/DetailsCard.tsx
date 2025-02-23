@@ -68,6 +68,7 @@ const DetailsCard = ({ course, userType }: any) => {
   const [enrolLoading, setEnrolLoading] = useState(false);
   const [isOpenPaymentModal, setIsOpenPaymentModal] = useState(false);
   const [isCoursePaid, setIsCoursePaid] = useState(false); // State to track if the course is paid
+  const [userBalance, setUserBalance] = useState();
   // const isCoursePaid = useRef(false);
   const [PurchasedCourses, setPurchasedCourses] = useState<string[]>([]); // State to store purchased courses
   const currentPath =
@@ -88,6 +89,7 @@ const DetailsCard = ({ course, userType }: any) => {
     : `https://${course.scholarshipUrl}`;
 
   useEffect(() => {
+    fetchUserById();
     dispatch(fetchAllTax());
   }, []);
 
@@ -181,6 +183,7 @@ const DetailsCard = ({ course, userType }: any) => {
     course: course,
     courseImage: courseImage,
     videoUrl: videoUrl,
+    userBalance: userBalance,
   };
 
   const closeModal = async () => {
@@ -291,42 +294,13 @@ const DetailsCard = ({ course, userType }: any) => {
     }
   };
 
-  // const deletePurchasedCourse = async () => {
-  //   try {
-  //     // Make a GET request to the endpoint
-  //     const response = await axios.delete(
-  //       `${config.API.API_URL}/payment/user/${
-  //         session?.user?.id
-  //       }/purchased-courses/${"35fde214-fd57-4d72-b515-e3216be50534"}`,
-  //       {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           "x-token": session?.user?.token, // Send auth token if needed
-  //         },
-  //       }
-  //     );
-
-  //     // Check if the request was successful
-  //     if (response.status === 200) {
-  //       console.log("Purchased Course Deleted", response.data);
-  //     } else {
-  //       console.error(
-  //         "Failed to delete purchased courses:",
-  //         response.data.message
-  //       );
-  //       return [];
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching purchased courses:", error);
-  //     return [];
-  //   }
-  // };
-
   const deletePurchasedCourse = async () => {
     try {
       // Make a GET request to the endpoint
-      const response = await axios.get(
-        `${config.API.API_URL}/payment/user/${session?.user?.id}/transaction-details`,
+      const response = await axios.delete(
+        `${config.API.API_URL}/payment/user/${
+          session?.user?.id
+        }/purchased-courses/${"35fde214-fd57-4d72-b515-e3216be50534"}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -337,12 +311,39 @@ const DetailsCard = ({ course, userType }: any) => {
 
       // Check if the request was successful
       if (response.status === 200) {
-        console.log("Purchased Course Deleted", response.data, response);
+        console.log("Purchased Course Deleted", response.data);
       } else {
         console.error(
           "Failed to delete purchased courses:",
           response.data.message
         );
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching purchased courses:", error);
+      return [];
+    }
+  };
+
+  const fetchUserById = async () => {
+    try {
+      const response = await axios.get(
+        `${config.API.API_URL}/users/${session?.user?.id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-token": session?.user?.token,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setUserBalance(
+          response?.data?.data?.balance >= 0 ? response?.data?.data?.balance : 0
+        );
+        console.log("user balance fetched", response.data.data.balance);
+      } else {
+        console.error("Failed to Transaction Details", response.data.message);
         return [];
       }
     } catch (error) {

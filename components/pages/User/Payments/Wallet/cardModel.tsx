@@ -138,11 +138,6 @@ const CardModal = ({
       message.error("Payment gateway not available for this combination.");
     }
   };
-  useEffect(() => {
-    if (!isOpenPaymentModal) {
-      sessionUpdate(); // Refresh session data when modal is closed
-    }
-  }, [isOpenPaymentModal, sessionUpdate]);
 
   const isFormValid = Object.values(billingAddress).every(
     (field) => field.trim() !== ""

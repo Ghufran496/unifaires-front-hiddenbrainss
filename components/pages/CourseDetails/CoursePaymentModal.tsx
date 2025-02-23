@@ -206,7 +206,6 @@ const CoursePaymentModal = ({
         balance: updatedAmount,
         courseId: ModalContent?.course?.id,
       };
-      // console.log("Payment payload:", payload);
       try {
         const response = await axios.put(
           `${config.API.API_URL}/users/update-balance-by-id`,
@@ -214,11 +213,14 @@ const CoursePaymentModal = ({
           {
             headers: {
               "Content-Type": "application/json",
-              "x-token": session?.user?.token, // Send auth token if needed
+              "x-token": session?.user?.token, 
             },
           }
         );
-        console.log(response);
+        if (response.status === 200) {
+          message.success("Transaction success from Wallet.");
+          location.reload();
+        }
       } catch (error) {
         console.error("Error updating payment:", error);
         message.error("Transaction failed. Please try again.");
@@ -355,7 +357,7 @@ const CoursePaymentModal = ({
                     paymentMethod === "wallet" ? "text-black" : "text-gray-600"
                   }`}
                 >
-                  Wallet({session?.user?.balance ?? "0"})
+                  Wallet({ModalContent.userBalance ?? "0"})
                 </span>
               </div>
             </Radio.Button>
@@ -534,7 +536,10 @@ const CoursePaymentModal = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between bg-slate-100 p-6 rounded-md">
               <p className="font-semibold">Available Balance</p>
-              <p className="font-semibold"> ${session?.user?.balance ?? "0"}</p>
+              <p className="font-semibold">
+                {" "}
+                ${ModalContent?.userBalance ?? "0"}
+              </p>
             </div>
 
             {/* Billing Address Section */}
