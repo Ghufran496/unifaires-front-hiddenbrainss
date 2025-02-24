@@ -8,6 +8,11 @@ import {
   Divider,
   Collapse,
   message,
+  Form,
+  Row,
+  Col,
+  Checkbox,
+  Card,
 } from "antd";
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -22,7 +27,11 @@ import VideoJs from "@/components/shared/video/VideoJs";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { RootState } from "@/redux/store";
 import { getCookie } from "cookies-next";
-import { country, fetchCountries } from "@/redux/features/CountrySlice";
+import {
+  fetchCountries,
+  fetchCountryStates,
+  fetchStateCities,
+} from "@/redux/features/CountrySlice";
 import {
   fetchBusinessDiscount,
   fetchCountryDiscount,
@@ -30,13 +39,13 @@ import {
 import { fetchAllTax } from "@/redux/features/TaxSlice";
 import axios from "axios";
 import { paymentGateways, TransactionType, PaymentStatus } from "./dummyTypes";
-import { user } from "@/redux/features/UserSlice";
 
 interface CoursePaymentModalProps {
   isOpenPaymentModal: boolean;
   setIsOpenPaymentModal: (isOpen: boolean) => void;
   ModalContent: any;
 }
+const { Title, Paragraph } = Typography;
 
 const CoursePaymentModal = ({
   isOpenPaymentModal,
@@ -56,99 +65,136 @@ const CoursePaymentModal = ({
   const selectedCurrency = getCookie("currency");
   const currency = selectedCurrency ? selectedCurrency : locationCurrency;
   const [selectedValue, setSelectedValue] = useState("USA");
-  const [billingAddress, setBillingAddress] = useState({
-    streetAddress: "",
-    city: "",
-    stateProvince: "",
-    postalCode: "",
-    country: selectedValue,
-  });
-  const isFormValid = Object.values(billingAddress).every(
-    (field) => field.trim() !== ""
-  );
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [defaultAddress, setDefaultAddress] = useState(false);
+  const [addressList, setAddressList] = useState<Array<any>>([]);
+  const [selectedAddress, setSelectedAddress] = useState<any | null>(null);
+  const [countryStates, setCountryStates] = useState();
 
-  console.log(ModalContent);
-  console.log(session);
-  // Handle input changes
-  const handleInputChange = (e: any) => {
-    const { id, value } = e.target;
-    setBillingAddress((prevState) => ({
-      ...prevState,
-      [id]: value,
-    }));
+  const countries = useAppSelector(
+    (state: RootState) => state.country.countries
+  );
+  const states = useAppSelector((state: RootState) => state.country.states);
+  const cities = useAppSelector((state: RootState) => state.country.cities);
+
+  const countryListOption = countries.map((c: any) => ({
+    label: c.name,
+    value: c.code,
+  }));
+
+  const statesOption = states.map((s: any) => ({
+    label: s.name,
+    value: s.state_code,
+  }));
+
+  const citiesOption = cities.map((s: any) => ({
+    label: s.name,
+    value: s.name,
+  }));
+
+  const fetchUserAddress = async () => {
+    await axios
+      .get(`${config.API.API_URL}/address/user/${session?.user?.id}`, {
+        headers: {
+          "x-token": session?.user?.token,
+        },
+      })
+      .then((res) => {
+        if (res.status) {
+          setAddressList(res.data.data);
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+      });
   };
-  const getTaxForCountry = (countryName: string) => {
-    if (!taxes || !Array.isArray(taxes)) {
-      return "N/A";
-    }
-    const country = taxes.find((c) => c.country === countryName);
-    return country ? country.tax : 0;
-  };
-  const getTaxForCountrys = getTaxForCountry(userCountry);
+
   useEffect(() => {
     dispatch(fetchCountries());
-    dispatch(fetchAllTax());
-    if (userCountry) {
-      dispatch(
-        fetchCountryDiscount({ type: "associate", country: userCountry })
-      );
-    }
-    if (businessId) {
-      dispatch(fetchBusinessDiscount({ type: "associate", businessId }));
-    }
+    fetchUserAddress();
   }, []);
-  const countryDiscount = useAppSelector(
-    (state: RootState) => state.discounts.countryDiscount
-  );
-  const businessDiscount = useAppSelector(
-    (state: RootState) => state.discounts.businessDiscount
-  );
 
-  const currencyRate = useAppSelector(
-    (state: RootState) => state.currency.currencyRate
-  );
-
-  const convertedTotalPrice = currencyRate
-    ? ModalContent?.convertedPrice * currencyRate
-    : ModalContent?.convertedPrice;
-
-  const estimatedTax =
-    convertedTotalPrice * (getTaxForCountry(userCountry) / 100);
-  const applicableDiscount =
-    businessDiscount && businessDiscount?.discount !== 0
-      ? businessDiscount
-      : countryDiscount;
-  const discountAmount =
-    convertedTotalPrice * (applicableDiscount?.discount / 100 || 0);
-  const beforeTax = convertedTotalPrice - discountAmount;
-  const finalPrice = convertedTotalPrice - discountAmount + estimatedTax;
-
-  const formatCurrency = (value: any) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: `${currencyRate ? currency : "USD"}`,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
+  const handleSelectedCountry = (countryCode: any) => {
+    dispatch(fetchCountryStates(countryCode));
   };
 
-  const handlePaymentChange = (e: any) => {
-    setPaymentMethod(e.target.value);
+  const handleSelectedState = (stateCode: any) => {
+    dispatch(fetchStateCities(stateCode));
   };
 
-  const handleChange = (value: any) => {
-    setSelectedValue(value);
+  const handleUseAddress = (addressInfo: any) => {
+    setSelectedAddress(addressInfo);
+    form.setFieldsValue({
+      country: addressInfo.country,
+      fullname: addressInfo.fullname,
+      phoneNumber: addressInfo.phoneNumber,
+      address: addressInfo.address,
+      state: addressInfo.state,
+      city: addressInfo.city,
+      zipcode: addressInfo.zipcode,
+    });
   };
 
-  // console.log(paymentMethod);
+  const handleAddress = async () => {
+    await form.validateFields();
+    const formData = form.getFieldsValue();
+    formData["default"] = defaultAddress;
+    console.log(
+      "!form.isFieldsTouched(true)",
+      form.isFieldsTouched(true),
+      "!form.getFieldsError().filter(({ errors }) => errors.length).length",
+      form.getFieldsError().filter(({ errors }) => errors.length).length
+    );
+    setLoading(true);
+    await axios
+      .post(
+        `${config.API.API_URL}/address`,
+        { ...formData },
+        {
+          headers: {
+            "x-token": session?.user?.token,
+          },
+        }
+      )
+      .then((res) => {
+        if (res.status) {
+          fetchUserAddress();
+          message.success("Address added successfully");
+        }
+      })
+      .catch((e) => {
+        message.error("Unable to Add Address");
+        console.log(e);
+      });
+    setLoading(false);
+  };
+
+  console.log(
+    "!form.isFieldsTouched(true)",
+    form.isFieldsTouched(true),
+    "!form.getFieldsError().filter(({ errors }) => errors.length).length",
+    form.getFieldsError().filter(({ errors }) => errors.length).length
+  );
+
   const handlePaymentGateway = async () => {
+    const formData = form.getFieldsValue();
+    const biilingaddress = {
+      streetAddress: formData.address,
+      city: formData.city,
+      stateProvince: formData.state,
+      postalCode: formData.zipcode,
+      country: formData.country,
+    };
+
     const transactionDetails = {
       userId: session?.user?.id,
-      billingAddress: billingAddress,
+      billingAddress: biilingaddress,
       transactionAmount: finalPrice,
       paymentStatus: PaymentStatus.PENDING,
       transactionType: TransactionType.PAYFUNDS,
     };
+
     if (paymentMethod === "wallet") {
       HandlePaymentByWallet();
     } else {
@@ -163,7 +209,7 @@ const CoursePaymentModal = ({
           selectedGateway,
           paymentMethod: paymentMethod,
           amount: finalPrice,
-          currency: paymentGateways[selectedValue], // Ensure currency is passed
+          paymentGatewayswithcurrency: paymentGateways[selectedValue],
           user: session?.user,
           redirectUrl: currentPath,
           courseId: ModalContent?.course?.id,
@@ -213,7 +259,7 @@ const CoursePaymentModal = ({
           {
             headers: {
               "Content-Type": "application/json",
-              "x-token": session?.user?.token, 
+              "x-token": session?.user?.token,
             },
           }
         );
@@ -227,6 +273,89 @@ const CoursePaymentModal = ({
       }
     }
   };
+
+  const getTaxForCountry = (countryName: string) => {
+    if (!taxes || !Array.isArray(taxes)) {
+      return "N/A";
+    }
+    const country = taxes.find((c) => c.country === countryName);
+    return country ? country.tax : 0;
+  };
+
+  const getTaxForCountrys = getTaxForCountry(userCountry);
+
+  useEffect(() => {
+    dispatch(fetchAllTax());
+    if (userCountry) {
+      dispatch(
+        fetchCountryDiscount({ type: "associate", country: userCountry })
+      );
+    }
+    if (businessId) {
+      dispatch(fetchBusinessDiscount({ type: "associate", businessId }));
+    }
+  }, []);
+
+  const countryDiscount = useAppSelector(
+    (state: RootState) => state.discounts.countryDiscount
+  );
+  const businessDiscount = useAppSelector(
+    (state: RootState) => state.discounts.businessDiscount
+  );
+
+  const currencyRate = useAppSelector(
+    (state: RootState) => state.currency.currencyRate
+  );
+
+  const convertedTotalPrice = currencyRate
+    ? ModalContent?.convertedPrice * currencyRate
+    : ModalContent?.convertedPrice;
+
+  const estimatedTax =
+    convertedTotalPrice * (getTaxForCountry(userCountry) / 100);
+  const applicableDiscount =
+    businessDiscount && businessDiscount?.discount !== 0
+      ? businessDiscount
+      : countryDiscount;
+  const discountAmount =
+    convertedTotalPrice * (applicableDiscount?.discount / 100 || 0);
+  const beforeTax = convertedTotalPrice - discountAmount;
+  const finalPrice = convertedTotalPrice - discountAmount + estimatedTax;
+
+  const formatCurrency = (value: any) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currencyRate ? currency : "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const handlePaymentChange = (e: any) => {
+    setPaymentMethod(e.target.value);
+  };
+
+  const handleChange = (value: any) => {
+    setSelectedValue(value);
+  };
+
+  const handleRemove = async (id: any) => {
+    try {
+      const response = await axios.delete(
+        `${config.API.API_URL}/payment/user/${session?.user.id}/address/${id}`,
+        {
+          headers: {
+            "x-token": session?.user?.token,
+          },
+        }
+      );
+      if (response.status === 200) {
+        fetchUserAddress();
+        message.success("Address removed successfully");
+      }
+    } catch (error) {}
+  };
+
   return (
     <Modal
       title={
@@ -237,7 +366,7 @@ const CoursePaymentModal = ({
       visible={isOpenPaymentModal}
       onCancel={() => setIsOpenPaymentModal(false)}
       footer={null}
-      width={600}
+      width={800}
     >
       <div className="space-y-4">
         <div className="flex space-x-2 p-4 bg-slate-50 rounded-md">
@@ -363,87 +492,230 @@ const CoursePaymentModal = ({
             </Radio.Button>
           </Radio.Group>
         </div>
-
+        <div className="mb-8 p-6 bg-white rounded-lg shadow-md">
+          <Paragraph className="text-gray-600 mb-6">
+            Please select a billing address from your address book (below) or
+            enter a new billing address. Don&apos;t worry, you will only need to
+            do this once for each credit card. If you contact us about your
+            order, we will reference your account only by the name you provide
+            below.
+          </Paragraph>
+          <Divider className="my-6" />
+          <div className="flex flex-col gap-6">
+            {(addressList?.length ?? 0) > 0 &&
+              addressList.map((addressInfo) => (
+                <Card
+                  hoverable
+                  key={addressInfo.id}
+                  className={`w-full transition-all duration-300 ease-in-out ${
+                    selectedAddress && selectedAddress.id === addressInfo.id
+                      ? "border-2 border-blue-500 shadow-lg"
+                      : "border border-gray-200 hover:shadow-md"
+                  }`}
+                >
+                  <div className="flex flex-col items-center text-center">
+                    <div className="flex justify-evenly items-center gap-2">
+                      <Paragraph className="m-0 text-gray-700 font-medium">
+                        {addressInfo.fullname}
+                      </Paragraph>
+                      <Paragraph className="m-0 text-gray-600">
+                        {addressInfo.address}
+                      </Paragraph>
+                      <Paragraph className="m-0 text-gray-600">
+                        {addressInfo.city} - {addressInfo.zipcode}
+                      </Paragraph>
+                      <Paragraph className="m-0 text-gray-600">
+                        {addressInfo.country}
+                      </Paragraph>
+                      <Paragraph className="m-0 text-gray-600">
+                        {addressInfo.phoneNumber}
+                      </Paragraph>
+                    </div>
+                    <div className="flex gap-4 mt-6">
+                      <Button
+                        type="primary"
+                        size="large"
+                        className="bg-blue-600 hover:bg-blue-700 transition-colors duration-300"
+                        onClick={() => handleUseAddress(addressInfo)}
+                      >
+                        Use this Address
+                      </Button>
+                      <Button
+                        type="text"
+                        className="text-blue-600 hover:text-blue-700 transition-colors duration-300"
+                        onClick={() => handleRemove(addressInfo.id)}
+                        loading={loading}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+          </div>
+          <Divider className="my-6" />
+        </div>
         {paymentMethod === "card" && (
           <div className="space-y-6">
             {/* Billing Address Section */}
+
             <div>
               <h3 className="font-semibold text-lg mb-2">Billing Address</h3>
-
-              <div className="mb-4">
-                <label htmlFor="streetAddress" className="block font-medium">
-                  Street Address
-                </label>
-                <Input
-                  id="streetAddress"
-                  placeholder="123 Main St"
-                  value={billingAddress.streetAddress}
-                  onChange={handleInputChange}
-                />
-              </div>
-
-              <div className="flex space-x-4 mb-4">
-                <div className="w-1/2">
-                  <label htmlFor="city" className="block font-medium">
-                    City
-                  </label>
-                  <Input
-                    id="city"
-                    placeholder="City"
-                    value={billingAddress.city}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="w-1/2">
-                  <label htmlFor="stateProvince" className="block font-medium">
-                    State/Province
-                  </label>
-                  <Input
-                    id="stateProvince"
-                    placeholder="State"
-                    value={billingAddress.stateProvince}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="flex space-x-4 mb-4">
-                <div className="w-1/2">
-                  <label htmlFor="postalCode" className="block font-medium">
-                    Postal Code
-                  </label>
-                  <Input
-                    id="postalCode"
-                    placeholder="Postal Code"
-                    type="number"
-                    value={billingAddress.postalCode}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="w-1/2">
-                  <label htmlFor="country" className="block font-medium">
-                    Country
-                  </label>
-                  <Select
-                    id="country"
-                    defaultValue="USA"
-                    className="w-full"
-                    onChange={handleChange}
+              <Form layout="vertical" form={form} size="large">
+                <Col>
+                  <Form.Item
+                    name="country"
+                    label="Country/Region"
+                    style={{ fontStyle: "italic", fontWeight: 600 }}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select a Country",
+                      },
+                    ]}
                   >
-                    <Select.Option value="Nigeria">
-                      Flutterwave Nigeria
-                    </Select.Option>
-                    <Select.Option value="Germany">
-                      Stripe Germany
-                    </Select.Option>
-                    <Select.Option value="France">Stripe France</Select.Option>
-                    <Select.Option value="USA">Stripe USA</Select.Option>
-                    <Select.Option value="Canada">Stripe Canada</Select.Option>
-                    <Select.Option value="Brazil">Stripe Brazil</Select.Option>
-                    {/* Add more countries as needed */}
-                  </Select>
-                </div>
-              </div>
+                    <Select
+                      showSearch
+                      allowClear
+                      placeholder="Select Country"
+                      optionFilterProp="children"
+                      filterOption={(
+                        input: string,
+                        option?: { label: string; value: string }
+                      ) =>
+                        (option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      options={countryListOption}
+                      onChange={handleSelectedCountry}
+                    />
+                  </Form.Item>
+                </Col>
+                <Form.Item
+                  name="fullname"
+                  label="Full Name(First and Last Name)"
+                  style={{ fontStyle: "italic", fontWeight: 600 }}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter name",
+                    },
+                  ]}
+                >
+                  <Input placeholder="BASF AG" className="p-4" />
+                </Form.Item>
+                <Form.Item
+                  name="phoneNumber"
+                  label="Phone Number"
+                  style={{ fontStyle: "italic", fontWeight: 600 }}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter a phone Number",
+                    },
+                  ]}
+                >
+                  <Input type="number" placeholder="BASF AG" className="p-4" />
+                </Form.Item>
+                <Form.Item
+                  name="address"
+                  label="Address"
+                  style={{ fontStyle: "italic", fontWeight: 600 }}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter an Address",
+                    },
+                  ]}
+                >
+                  <Input placeholder="BASF AG" className="p-4" />
+                </Form.Item>
+                <Row gutter={[16, 16]}>
+                  <Col lg={8}>
+                    <Form.Item
+                      name="state"
+                      label="State"
+                      style={{ fontStyle: "italic", fontWeight: 600 }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please select a State",
+                        },
+                      ]}
+                    >
+                      <Select
+                        showSearch
+                        allowClear
+                        placeholder="Select State"
+                        optionFilterProp="children"
+                        filterOption={(
+                          input: string,
+                          option?: { label: string; value: string }
+                        ) =>
+                          (option?.label ?? "")
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
+                        options={statesOption}
+                        onChange={handleSelectedState}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col lg={8}>
+                    <Form.Item
+                      name="city"
+                      label="City"
+                      style={{ fontStyle: "italic", fontWeight: 600 }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please select a City",
+                        },
+                      ]}
+                    >
+                      <Select
+                        showSearch
+                        placeholder="Select City"
+                        optionFilterProp="children"
+                        filterOption={(
+                          input: string,
+                          option?: { label: string; value: string }
+                        ) =>
+                          (option?.label ?? "")
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
+                        options={citiesOption}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  <Col lg={8}>
+                    <Form.Item
+                      name="zipcode"
+                      label="Zip Code"
+                      style={{ fontStyle: "italic", fontWeight: 600 }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please select the Zip Code",
+                        },
+                      ]}
+                    >
+                      <Input placeholder="9394" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Checkbox
+                  onChange={(e) => {
+                    setDefaultAddress(e.target.checked);
+                    handleAddress();
+                  }}
+                >
+                  Make this my default address
+                </Checkbox>
+              </Form>
             </div>
           </div>
         )}
@@ -454,84 +726,165 @@ const CoursePaymentModal = ({
             {/* Billing Address Section */}
             <div>
               <h3 className="font-semibold text-lg mb-2">Billing Address</h3>
-
-              <div className="mb-4">
-                <label htmlFor="streetAddress" className="block font-medium">
-                  Street Address
-                </label>
-                <Input
-                  id="streetAddress"
-                  placeholder="123 Main St"
-                  value={billingAddress.streetAddress}
-                  onChange={handleInputChange}
-                />
-              </div>
-
-              <div className="flex space-x-4 mb-4">
-                <div className="w-1/2">
-                  <label htmlFor="city" className="block font-medium">
-                    City
-                  </label>
-                  <Input
-                    id="city"
-                    placeholder="City"
-                    value={billingAddress.city}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="w-1/2">
-                  <label htmlFor="stateProvince" className="block font-medium">
-                    State/Province
-                  </label>
-                  <Input
-                    id="stateProvince"
-                    placeholder="State"
-                    value={billingAddress.stateProvince}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="flex space-x-4 mb-4">
-                <div className="w-1/2">
-                  <label htmlFor="postalCode" className="block font-medium">
-                    Postal Code
-                  </label>
-                  <Input
-                    id="postalCode"
-                    placeholder="Postal Code"
-                    type="number"
-                    value={billingAddress.postalCode}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="w-1/2">
-                  <label htmlFor="country" className="block font-medium">
-                    Country
-                  </label>
-                  <Select
-                    id="country"
-                    defaultValue="USA"
-                    className="w-full"
-                    onChange={handleChange}
+              <Form layout="vertical" form={form} size="large">
+                <Col>
+                  <Form.Item
+                    name="country"
+                    label="Country/Region"
+                    style={{ fontStyle: "italic", fontWeight: 600 }}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select a Country",
+                      },
+                    ]}
                   >
-                    <Select.Option value="Nigeria">
-                      Flutterwave Nigeria
-                    </Select.Option>
-                    <Select.Option value="Germany">
-                      Stripe Germany
-                    </Select.Option>
-                    <Select.Option value="France">Stripe France</Select.Option>
-                    <Select.Option value="USA">Stripe USA</Select.Option>
-                    <Select.Option value="Canada">Stripe Canada</Select.Option>
-                    <Select.Option value="Brazil">Stripe Brazil</Select.Option>
-                    {/* Add more countries as needed */}
-                  </Select>
-                </div>
-              </div>
+                    <Select
+                      showSearch
+                      allowClear
+                      placeholder="Select Country"
+                      optionFilterProp="children"
+                      filterOption={(
+                        input: string,
+                        option?: { label: string; value: string }
+                      ) =>
+                        (option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      options={countryListOption}
+                      onChange={handleSelectedCountry}
+                    />
+                  </Form.Item>
+                </Col>
+                <Form.Item
+                  name="fullname"
+                  label="Full Name(First and Last Name)"
+                  style={{ fontStyle: "italic", fontWeight: 600 }}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter name",
+                    },
+                  ]}
+                >
+                  <Input placeholder="BASF AG" className="p-4" />
+                </Form.Item>
+                <Form.Item
+                  name="phoneNumber"
+                  label="Phone Number"
+                  style={{ fontStyle: "italic", fontWeight: 600 }}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter a phone Number",
+                    },
+                  ]}
+                >
+                  <Input type="number" placeholder="BASF AG" className="p-4" />
+                </Form.Item>
+                <Form.Item
+                  name="address"
+                  label="Address"
+                  style={{ fontStyle: "italic", fontWeight: 600 }}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter an Address",
+                    },
+                  ]}
+                >
+                  <Input placeholder="BASF AG" className="p-4" />
+                </Form.Item>
+                <Row gutter={[16, 16]}>
+                  <Col lg={8}>
+                    <Form.Item
+                      name="state"
+                      label="State"
+                      style={{ fontStyle: "italic", fontWeight: 600 }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please select a State",
+                        },
+                      ]}
+                    >
+                      <Select
+                        showSearch
+                        allowClear
+                        placeholder="Select State"
+                        optionFilterProp="children"
+                        filterOption={(
+                          input: string,
+                          option?: { label: string; value: string }
+                        ) =>
+                          (option?.label ?? "")
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
+                        options={statesOption}
+                        onChange={handleSelectedState}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col lg={8}>
+                    <Form.Item
+                      name="city"
+                      label="City"
+                      style={{ fontStyle: "italic", fontWeight: 600 }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please select a City",
+                        },
+                      ]}
+                    >
+                      <Select
+                        showSearch
+                        placeholder="Select City"
+                        optionFilterProp="children"
+                        filterOption={(
+                          input: string,
+                          option?: { label: string; value: string }
+                        ) =>
+                          (option?.label ?? "")
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
+                        options={citiesOption}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  <Col lg={8}>
+                    <Form.Item
+                      name="zipcode"
+                      label="Zip Code"
+                      style={{ fontStyle: "italic", fontWeight: 600 }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please select the Zip Code",
+                        },
+                      ]}
+                    >
+                      <Input placeholder="9394" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Checkbox
+                  onChange={(e) => {
+                    setDefaultAddress(e.target.checked);
+                    handleAddress();
+                  }}
+                >
+                  Make this my default address
+                </Checkbox>
+              </Form>
             </div>
           </div>
         )}
+
         {paymentMethod === "wallet" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between bg-slate-100 p-6 rounded-md">
@@ -545,58 +898,161 @@ const CoursePaymentModal = ({
             {/* Billing Address Section */}
             <div>
               <h3 className="font-semibold text-lg mb-2">Billing Address</h3>
+              <Form layout="vertical" form={form} size="large">
+                <Col>
+                  <Form.Item
+                    name="country"
+                    label="Country/Region"
+                    style={{ fontStyle: "italic", fontWeight: 600 }}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select a Country",
+                      },
+                    ]}
+                  >
+                    <Select
+                      showSearch
+                      allowClear
+                      placeholder="Select Country"
+                      optionFilterProp="children"
+                      filterOption={(
+                        input: string,
+                        option?: { label: string; value: string }
+                      ) =>
+                        (option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      options={countryListOption}
+                      onChange={handleSelectedCountry}
+                    />
+                  </Form.Item>
+                </Col>
+                <Form.Item
+                  name="fullname"
+                  label="Full Name(First and Last Name)"
+                  style={{ fontStyle: "italic", fontWeight: 600 }}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter name",
+                    },
+                  ]}
+                >
+                  <Input placeholder="BASF AG" className="p-4" />
+                </Form.Item>
+                <Form.Item
+                  name="phoneNumber"
+                  label="Phone Number"
+                  style={{ fontStyle: "italic", fontWeight: 600 }}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter a phone Number",
+                    },
+                  ]}
+                >
+                  <Input type="number" placeholder="BASF AG" className="p-4" />
+                </Form.Item>
+                <Form.Item
+                  name="address"
+                  label="Address"
+                  style={{ fontStyle: "italic", fontWeight: 600 }}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter an Address",
+                    },
+                  ]}
+                >
+                  <Input placeholder="BASF AG" className="p-4" />
+                </Form.Item>
+                <Row gutter={[16, 16]}>
+                  <Col lg={8}>
+                    <Form.Item
+                      name="state"
+                      label="State"
+                      style={{ fontStyle: "italic", fontWeight: 600 }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please select a State",
+                        },
+                      ]}
+                    >
+                      <Select
+                        showSearch
+                        allowClear
+                        placeholder="Select State"
+                        optionFilterProp="children"
+                        filterOption={(
+                          input: string,
+                          option?: { label: string; value: string }
+                        ) =>
+                          (option?.label ?? "")
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
+                        options={statesOption}
+                        onChange={handleSelectedState}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col lg={8}>
+                    <Form.Item
+                      name="city"
+                      label="City"
+                      style={{ fontStyle: "italic", fontWeight: 600 }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please select a City",
+                        },
+                      ]}
+                    >
+                      <Select
+                        showSearch
+                        placeholder="Select City"
+                        optionFilterProp="children"
+                        filterOption={(
+                          input: string,
+                          option?: { label: string; value: string }
+                        ) =>
+                          (option?.label ?? "")
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
+                        options={citiesOption}
+                      />
+                    </Form.Item>
+                  </Col>
 
-              <div className="mb-4">
-                <label htmlFor="streetAddress" className="block font-medium">
-                  Street Address
-                </label>
-                <Input
-                  id="streetAddress"
-                  placeholder="123 Main St"
-                  value={billingAddress.streetAddress}
-                  onChange={handleInputChange}
-                />
-              </div>
-
-              <div className="flex space-x-4 mb-4">
-                <div className="w-1/2">
-                  <label htmlFor="city" className="block font-medium">
-                    City
-                  </label>
-                  <Input
-                    id="city"
-                    placeholder="City"
-                    value={billingAddress.city}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="w-1/2">
-                  <label htmlFor="stateProvince" className="block font-medium">
-                    State/Province
-                  </label>
-                  <Input
-                    id="stateProvince"
-                    placeholder="State"
-                    value={billingAddress.stateProvince}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="flex space-x-4 mb-4">
-                <div className="w-1/2">
-                  <label htmlFor="postalCode" className="block font-medium">
-                    Postal Code
-                  </label>
-                  <Input
-                    id="postalCode"
-                    type="number"
-                    placeholder="Postal Code"
-                    value={billingAddress.postalCode}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
+                  <Col lg={8}>
+                    <Form.Item
+                      name="zipcode"
+                      label="Zip Code"
+                      style={{ fontStyle: "italic", fontWeight: 600 }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please select the Zip Code",
+                        },
+                      ]}
+                    >
+                      <Input placeholder="9394" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Checkbox
+                  onChange={(e) => {
+                    setDefaultAddress(e.target.checked);
+                    handleAddress();
+                  }}
+                >
+                  Make this my default address
+                </Checkbox>
+              </Form>
             </div>
           </div>
         )}
@@ -678,12 +1134,18 @@ const CoursePaymentModal = ({
 
         <Button
           type="primary"
+          // className={`w-full h-12 mt-4 "bg-purple-600 text-white"
+          // }`}
           className={`w-full h-12 mt-4 ${
-            isFormValid
+            form.isFieldsTouched(true) &&
+            !form.getFieldsError().filter(({ errors }) => errors.length).length
               ? "bg-purple-600 text-white"
               : "bg-gray-400 text-gray-700 cursor-not-allowed"
           }`}
-          disabled={!isFormValid}
+          disabled={
+            !form.isFieldsTouched(true) ||
+            !form.getFieldsError().filter(({ errors }) => errors.length).length
+          }
           onClick={handlePaymentGateway}
         >
           Complete Purchase

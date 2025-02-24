@@ -14,10 +14,9 @@ const SendMoneyModal = ({
   isSendMoneyModalOpen,
   ModalContent,
 }: SendMoneyModalProps) => {
-  const { data: session, status, update: sessionUpdate } = useSession();
+  const { data: session } = useSession();
   const userId = session?.user.id;
   const handleYesClick = () => {
-    // Handle the logic for sending money
     console.log("Money sent");
     handleCloseSendMoneyModal(false);
   };

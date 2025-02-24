@@ -74,8 +74,12 @@ const UserWallet = () => {
   const [transactionDetails, setTransactionDetails] = useState<
     TransactionResponse[]
   >([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [userBalance, setUserBalance] = useState();
 
+  const filteredTransactions = transactionDetails.filter((transaction) =>
+    transaction.transactionType.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   const handleOpenSendMoneyModal = () => {
     setIsSendMoneyModalOpen(true);
   };
@@ -506,13 +510,14 @@ const UserWallet = () => {
                 <input
                   type="text"
                   placeholder="Search transactions..."
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                 />
               </div>
             </div>
 
             {/* Time Range Filter */}
-            <div className="relative">
+            {/* <div className="relative">
               <select className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 focus:border-transparent appearance-none pr-10">
                 <option value="all">All Time</option>
                 <option value="month">This Month</option>
@@ -537,10 +542,10 @@ const UserWallet = () => {
                 <rect width="18" height="18" x="3" y="4" rx="2"></rect>
                 <path d="M3 10h18"></path>
               </svg>
-            </div>
+            </div> */}
 
             {/* Export Button */}
-            <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">
+            {/* <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -558,10 +563,10 @@ const UserWallet = () => {
                 <line x1="12" x2="12" y1="15" y2="3"></line>
               </svg>
               <span>Export</span>
-            </button>
+            </button> */}
           </div>
-          <div className="space-y-4">
-            {transactionDetails.map((transaction) => (
+          <div className="space-y-4 h-96 overflow-scroll">
+            {filteredTransactions.map((transaction) => (
               <div
                 key={transaction.id}
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -764,9 +769,7 @@ const UserWallet = () => {
               placeholder="Add a message for the recipient"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
               rows={3}
-            >
-              dfg
-            </textarea>
+            ></textarea>
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4">
