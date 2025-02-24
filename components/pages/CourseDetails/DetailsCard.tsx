@@ -94,7 +94,6 @@ const DetailsCard = ({ course, userType }: any) => {
   }, []);
 
   const taxes = useAppSelector((state: any) => state.tax.taxes);
-
   const getTaxForCountry = (countryName: string) => {
     if (!taxes || !Array.isArray(taxes)) {
       // Handle the case when currentPricingIndex is not defined or not an array

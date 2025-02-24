@@ -70,7 +70,7 @@ const CoursePaymentModal = ({
   const [defaultAddress, setDefaultAddress] = useState(false);
   const [addressList, setAddressList] = useState<Array<any>>([]);
   const [selectedAddress, setSelectedAddress] = useState<any | null>(null);
-  const [countryStates, setCountryStates] = useState();
+  const [dbUser, setDbUser] = useState<any>();
 
   const countries = useAppSelector(
     (state: RootState) => state.country.countries
@@ -110,7 +110,26 @@ const CoursePaymentModal = ({
       });
   };
 
+  const fetchUserById = async () => {
+    await axios
+      .get(`${config.API.API_URL}/users/${session?.user?.id}`, {
+        headers: {
+          "x-token": session?.user?.token,
+        },
+      })
+      .then((res) => {
+        if (res.status) {
+          setDbUser(res.data.data);
+          console.log(res.data.data, "Userdata");
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  };
+
   useEffect(() => {
+    fetchUserById();
     dispatch(fetchCountries());
     fetchUserAddress();
   }, []);
@@ -140,12 +159,6 @@ const CoursePaymentModal = ({
     await form.validateFields();
     const formData = form.getFieldsValue();
     formData["default"] = defaultAddress;
-    console.log(
-      "!form.isFieldsTouched(true)",
-      form.isFieldsTouched(true),
-      "!form.getFieldsError().filter(({ errors }) => errors.length).length",
-      form.getFieldsError().filter(({ errors }) => errors.length).length
-    );
     setLoading(true);
     await axios
       .post(
@@ -169,13 +182,6 @@ const CoursePaymentModal = ({
       });
     setLoading(false);
   };
-
-  console.log(
-    "!form.isFieldsTouched(true)",
-    form.isFieldsTouched(true),
-    "!form.getFieldsError().filter(({ errors }) => errors.length).length",
-    form.getFieldsError().filter(({ errors }) => errors.length).length
-  );
 
   const handlePaymentGateway = async () => {
     const formData = form.getFieldsValue();
@@ -217,7 +223,6 @@ const CoursePaymentModal = ({
           transactionDetails,
         };
 
-        // console.log("Payment payload:", payload);
         try {
           const response = await axios.post(
             `${config.API.API_URL}/payment/create-stripe-session`,
@@ -282,7 +287,11 @@ const CoursePaymentModal = ({
     return country ? country.tax : 0;
   };
 
-  const getTaxForCountrys = getTaxForCountry(userCountry);
+  const dbuserCountry = dbUser?.country;
+  const matchedCountry = countries.find(
+    (country: any) => country.code === dbuserCountry
+  );
+  const VatTaxpercentage = getTaxForCountry(matchedCountry?.name);
 
   useEffect(() => {
     dispatch(fetchAllTax());
@@ -308,9 +317,8 @@ const CoursePaymentModal = ({
   );
 
   const convertedTotalPrice = currencyRate
-    ? ModalContent?.convertedPrice * currencyRate
-    : ModalContent?.convertedPrice;
-
+    ? ModalContent?.course?.pricing?.amount * currencyRate
+    : ModalContent?.course?.pricing?.amount;
   const estimatedTax =
     convertedTotalPrice * (getTaxForCountry(userCountry) / 100);
   const applicableDiscount =
@@ -320,7 +328,9 @@ const CoursePaymentModal = ({
   const discountAmount =
     convertedTotalPrice * (applicableDiscount?.discount / 100 || 0);
   const beforeTax = convertedTotalPrice - discountAmount;
-  const finalPrice = convertedTotalPrice - discountAmount + estimatedTax;
+  const vatTaxFinal = beforeTax * (VatTaxpercentage / 100);
+  const finalPrice =
+    convertedTotalPrice - discountAmount + estimatedTax + vatTaxFinal;
 
   const formatCurrency = (value: any) => {
     return new Intl.NumberFormat("en-US", {
@@ -1072,8 +1082,8 @@ const CoursePaymentModal = ({
             <Typography.Paragraph className="flex justify-between">
               <span>
                 {businessDiscount && businessDiscount?.discount !== 0
-                  ? "Business Discount"
-                  : "Country Discount"}
+                  ? "Discount"
+                  : "Discount"}
                 <span className="text-purple-600 font-bold">
                   ({applicableDiscount?.discount}%):
                 </span>
@@ -1087,20 +1097,20 @@ const CoursePaymentModal = ({
               <span className="ml-auto text-purple-600 font-bold">$0.00</span>
             </Typography.Paragraph>
             <Typography.Paragraph className="flex justify-between">
-              Total before tax:
+              Total before VAT:
               <span className="ml-auto text-purple-600 font-bold">
                 {formatCurrency(beforeTax) || "0.00"}
               </span>
             </Typography.Paragraph>
             <Typography.Paragraph className="flex justify-between">
               <span>
-                Estimated tax to be collected
+                VAT
                 <span className="text-purple-600 font-bold">
-                  ({getTaxForCountry(userCountry)}%):
+                  ({VatTaxpercentage}%):
                 </span>
               </span>
               <span className="ml-auto text-purple-600 font-bold">
-                {formatCurrency(estimatedTax) || "0.00"}
+                {formatCurrency(vatTaxFinal) || "0.00"}
               </span>
             </Typography.Paragraph>
 
@@ -1134,8 +1144,6 @@ const CoursePaymentModal = ({
 
         <Button
           type="primary"
-          // className={`w-full h-12 mt-4 "bg-purple-600 text-white"
-          // }`}
           className={`w-full h-12 mt-4 ${
             form.isFieldsTouched(true) &&
             !form.getFieldsError().filter(({ errors }) => errors.length).length

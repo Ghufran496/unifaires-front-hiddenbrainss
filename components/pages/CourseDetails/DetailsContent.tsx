@@ -1,13 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
 // next
-import NextLink from "next/link";
 import { useSearchParams } from "next/navigation";
 // antd and Icon components
 import { Tag, List, Collapse, Typography, Button } from "antd";
 import {
   BookOutlined,
-  PlayCircleFilled,
   QuestionCircleFilled,
 } from "@ant-design/icons";
 // app components
@@ -74,7 +72,6 @@ const DetailsContent = ({ course, courseProps }: PropsInt) => {
     return `${formattedHours}${formattedMinutes}${formattedSeconds}`;
   };
 
-  console.log("here is the course", course);
 
   return (
     <div className="mb-8">
