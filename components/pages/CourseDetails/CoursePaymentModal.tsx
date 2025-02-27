@@ -120,7 +120,7 @@ const CoursePaymentModal = ({
       .then((res) => {
         if (res.status) {
           setDbUser(res.data.data);
-          console.log(res.data.data, "Userdata");
+          // console.log(res.data.data, "Userdata");
         }
       })
       .catch((e) => {
@@ -316,21 +316,35 @@ const CoursePaymentModal = ({
     (state: RootState) => state.currency.currencyRate
   );
 
+  const TotalValue = ModalContent?.course?.pricing?.amount;
+  const DiscountValue = ModalContent?.course?.pricing?.discount;
+  const courseDiscount = (DiscountValue * TotalValue) / 100;
+
+  // const convertedTotalPrice = currencyRate
+  //   ? ModalContent?.course?.pricing?.amount * currencyRate
+  //   : ModalContent?.course?.pricing?.amount;
   const convertedTotalPrice = currencyRate
-    ? ModalContent?.course?.pricing?.amount * currencyRate
-    : ModalContent?.course?.pricing?.amount;
+    ? TotalValue * currencyRate
+    : TotalValue;
+
+  const beforeTaxesamount = TotalValue - courseDiscount;
+  // console.log(beforeTaxesamount, "beforeTaxesamount");
+
+  console.log(session, "diuugi");
   const estimatedTax =
-    convertedTotalPrice * (getTaxForCountry(userCountry) / 100);
+    beforeTaxesamount * (getTaxForCountry(userCountry) / 100);
+
   const applicableDiscount =
     businessDiscount && businessDiscount?.discount !== 0
       ? businessDiscount
       : countryDiscount;
-  const discountAmount =
-    convertedTotalPrice * (applicableDiscount?.discount / 100 || 0);
-  const beforeTax = convertedTotalPrice - discountAmount;
+
+  console.log(businessDiscount, businessDiscount?.discount, countryDiscount);
+  const discountAmount = beforeTaxesamount * (0 / 100 || 0);
+  const beforeTax = beforeTaxesamount - discountAmount;
   const vatTaxFinal = beforeTax * (VatTaxpercentage / 100);
   const finalPrice =
-    convertedTotalPrice - discountAmount + estimatedTax + vatTaxFinal;
+    beforeTaxesamount - discountAmount + estimatedTax + vatTaxFinal;
 
   const formatCurrency = (value: any) => {
     return new Intl.NumberFormat("en-US", {
@@ -1075,18 +1089,26 @@ const CoursePaymentModal = ({
             <Typography.Paragraph className="flex justify-between">
               Items:
               <span className="ml-auto text-purple-600 font-bold">
-                {formatCurrency(convertedTotalPrice) || "0.00"}
+                {formatCurrency(beforeTaxesamount) || "0.00"}
               </span>
             </Typography.Paragraph>
-
+            {/* <Typography.Paragraph className="flex justify-between">
+              <span>
+                Course Discount
+                <span className="text-purple-600 font-bold">
+                  ({DiscountValue}%):
+                </span>
+              </span>
+              <span className="ml-auto text-purple-600 font-bold">
+                - {formatCurrency(courseDiscount) || "0.00"}
+              </span>
+            </Typography.Paragraph> */}
             <Typography.Paragraph className="flex justify-between">
               <span>
                 {businessDiscount && businessDiscount?.discount !== 0
-                  ? "Discount"
-                  : "Discount"}
-                <span className="text-purple-600 font-bold">
-                  ({applicableDiscount?.discount}%):
-                </span>
+                  ? "Special Discount"
+                  : "Special Discount"}
+                <span className="text-purple-600 font-bold">({0}%):</span>
               </span>
               <span className="ml-auto text-purple-600 font-bold">
                 - {formatCurrency(discountAmount) || "0.00"}

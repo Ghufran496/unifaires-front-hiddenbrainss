@@ -352,7 +352,7 @@ const DetailsCard = ({ course, userType }: any) => {
   };
 
   // console.log("Purchased Courses", PurchasedCourses);
-
+console.log("course", course);
   return (
     <Card className="lg:-mt-64 shadow-sm sticky mb-6 top-0">
       <div>
