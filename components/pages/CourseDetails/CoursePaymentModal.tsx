@@ -339,7 +339,6 @@ const CoursePaymentModal = ({
       ? businessDiscount
       : countryDiscount;
 
-  console.log(businessDiscount, businessDiscount?.discount, countryDiscount);
   const discountAmount = beforeTaxesamount * (0 / 100 || 0);
   const beforeTax = beforeTaxesamount - discountAmount;
   const vatTaxFinal = beforeTax * (VatTaxpercentage / 100);

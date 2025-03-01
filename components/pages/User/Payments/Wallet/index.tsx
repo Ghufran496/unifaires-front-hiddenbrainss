@@ -816,7 +816,9 @@ const UserWallet = () => {
         />
       )}
 
-      {isPaypalModalOpen && <WithdrawToPaypal setIsModalOpen={setIsPaypalModalOpen} />}
+      {isPaypalModalOpen && (
+        <WithdrawToPaypal setIsModalOpen={setIsPaypalModalOpen} />
+      )}
 
       {/* Add Funds Button */}
       {activeSection === "addFunds" && (
@@ -969,9 +971,12 @@ const UserWallet = () => {
                 <h3 className="font-medium">Paypal Transfer</h3>
               </div>
               <p className="text-sm text-gray-600 mb-4">
-                2-3 business days • No fee
+                1-2 hours • $0.25 fee
               </p>
-              <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors" onClick={() => setIsPaypalModalOpen(true)}>
+              <button
+                className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                onClick={() => setIsPaypalModalOpen(true)}
+              >
                 Withdraw to Paypal
               </button>
             </div>

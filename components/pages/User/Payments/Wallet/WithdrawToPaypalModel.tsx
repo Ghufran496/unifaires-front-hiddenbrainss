@@ -1,25 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal, Input, Button, message } from "antd";
+import config from "@/app/utils/config";
+import axios from "axios";
+import { useSession } from "next-auth/react";
 
 interface WithdrawToPaypalProps {
   setIsModalOpen: (open: boolean) => void;
 }
-import config from "@/app/utils/config";
-import axios from "axios";
-import { useSession } from "next-auth/react";
 
 const WithdrawToPaypal = ({ setIsModalOpen }: WithdrawToPaypalProps) => {
   const [email, setEmail] = useState("");
   const [amount, setAmount] = useState("");
   const [errors, setErrors] = useState({ email: "", amount: "" });
+  const [balanceError, setBalanceError] = useState("");
+  const [paypalFee, setPaypalFee] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [userBalance, setUserBalance] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
   const { data: session } = useSession();
+
+  useEffect(() => {
+    const fetchUserBalance = async () => {
+      if (!session?.user?.id) return;
+      
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `${config.API.API_URL}/users/${session.user.id}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "x-token": session.user.token,
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          setUserBalance(
+            response?.data?.data?.balance >= 0 ? response?.data?.data?.balance : 0
+          );
+          console.log("User balance fetched", response.data.data.balance);
+        } else {
+          console.error("Failed to fetch user balance", response.data.message);
+          setUserBalance(0);
+        }
+      } catch (error) {
+        console.error("Error fetching user balance:", error);
+        setUserBalance(0);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserBalance();
+  }, [session]);
+
+  const calculatePaypalFee = (amount: number) => {
+    return 0.25; // Fixed fee of $0.25
+  };
 
   const validateEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validateAmount = (amount: string) =>
-    /^\d+(\.\d{1,2})?$/.test(amount) && parseFloat(amount) > 0;
+
+  const validateAmount = (amount: string) => {
+    if (!(/^\d+(\.\d{1,2})?$/.test(amount) && parseFloat(amount) > 0)) {
+      return false;
+    }
+
+    // Check if amount exceeds user balance
+    const amountValue = parseFloat(amount);
+    const fee = calculatePaypalFee(amountValue);
+    return amountValue + fee <= userBalance;
+  };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -30,23 +85,76 @@ const WithdrawToPaypal = ({ setIsModalOpen }: WithdrawToPaypalProps) => {
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAmount(e.target.value);
-    setErrors((prev) => ({
-      ...prev,
-      amount: validateAmount(e.target.value) ? "" : "Enter a valid amount",
-    }));
+    const newAmount = e.target.value;
+    setAmount(newAmount);
+
+    // First check basic format
+    const isValidFormat =
+      /^\d+(\.\d{1,2})?$/.test(newAmount) && parseFloat(newAmount) > 0;
+
+    if (!isValidFormat) {
+      setErrors((prev) => ({ ...prev, amount: "Enter a valid amount" }));
+      setBalanceError("");
+      setPaypalFee(0);
+      setTotalAmount(0);
+      return;
+    }
+
+    setErrors((prev) => ({ ...prev, amount: "" }));
+
+    // Calculate PayPal fee and total amount
+    const amountValue = parseFloat(newAmount);
+    const fee = calculatePaypalFee(amountValue);
+    setPaypalFee(fee);
+    setTotalAmount(amountValue + fee);
+
+    // Then check against balance
+    if (amountValue + fee > userBalance) {
+      setBalanceError(
+        `You cannot withdraw more than your available balance ($${userBalance.toFixed(
+          2
+        )})`
+      );
+    } else {
+      setBalanceError("");
+    }
   };
 
-  const isButtonDisabled = !validateEmail(email) || !validateAmount(amount);
+  // Check if button should be disabled
+  const isValidEmail = validateEmail(email);
+  const isValidAmountFormat =
+    amount && /^\d+(\.\d{1,2})?$/.test(amount) && parseFloat(amount) > 0;
+  const isAmountWithinBalance =
+    isValidAmountFormat && totalAmount <= userBalance;
+  const isButtonDisabled =
+    !isValidEmail ||
+    !isValidAmountFormat ||
+    !isAmountWithinBalance ||
+    userBalance <= 0 ||
+    isLoading;
+
   const handleWithdrawPaypapal = async () => {
-    console.log("Withdraw initiated:", { email, amount });
+    // Check if user has sufficient balance
+    if (userBalance <= 0) {
+      setBalanceError("You don't have any funds to withdraw.");
+      return;
+    }
+
+    if (totalAmount > userBalance) {
+      setBalanceError(
+        `You cannot withdraw more than your available balance ($${Number(
+          userBalance || 0
+        ).toFixed(2)})`
+      );
+      return;
+    }
+
     const payload = {
-      amount: amount,
+      amount: totalAmount,
       userId: session?.user.id,
       paypalEmail: email,
     };
 
-    console.log("Payment payload:", payload);
     try {
       const response = await axios.post(
         `${config.API.API_URL}/paypal/withdraw`,
@@ -54,13 +162,12 @@ const WithdrawToPaypal = ({ setIsModalOpen }: WithdrawToPaypalProps) => {
         {
           headers: {
             "Content-Type": "application/json",
-            "x-token": session?.user?.token, // Send auth token if needed
+            "x-token": session?.user?.token,
           },
         }
       );
 
       if (response.status === 200) {
-        console.log(response);
         message.success("Withdraw success to the provided gmail account.");
         location.reload();
       }
@@ -93,37 +200,76 @@ const WithdrawToPaypal = ({ setIsModalOpen }: WithdrawToPaypalProps) => {
       ]}
     >
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            PayPal Email
-          </label>
-          <Input
-            type="email"
-            placeholder="Enter your PayPal email"
-            value={email}
-            onChange={handleEmailChange}
-            status={errors.email ? "error" : ""}
-          />
-          {errors.email && (
-            <p className="text-red-500 text-sm">{errors.email}</p>
-          )}
-        </div>
+        {isLoading ? (
+          <div className="text-center py-4">
+            <p>Loading your balance...</p>
+          </div>
+        ) : (
+          <>
+            {userBalance <= 0 && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                You don't have any funds available to withdraw.
+              </div>
+            )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Amount ($)
-          </label>
-          <Input
-            type="number"
-            placeholder="Enter amount"
-            value={amount}
-            onChange={handleAmountChange}
-            status={errors.amount ? "error" : ""}
-          />
-          {errors.amount && (
-            <p className="text-red-500 text-sm">{errors.amount}</p>
-          )}
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                PayPal Email
+              </label>
+              <Input
+                type="email"
+                placeholder="Enter your PayPal email"
+                value={email}
+                onChange={handleEmailChange}
+                status={errors.email ? "error" : ""}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Amount ($)
+              </label>
+              <Input
+                type="number"
+                placeholder="Enter amount"
+                value={amount}
+                onChange={handleAmountChange}
+                status={errors.amount || balanceError ? "error" : ""}
+              />
+              {errors.amount && (
+                <p className="text-red-500 text-sm">{errors.amount}</p>
+              )}
+              {balanceError && (
+                <p className="text-red-500 text-sm">{balanceError}</p>
+              )}
+              <p className="text-sm text-gray-500 mt-1">
+                Available balance: ${Number(userBalance || 0).toFixed(2)}
+              </p>
+
+              {/* Display PayPal fee and total amount */}
+              {isValidAmountFormat && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                  <p className="text-sm text-gray-700">
+                    <span className="font-medium">PayPal Fee:</span> $
+                    {paypalFee.toFixed(2)}
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    <span className="font-medium">
+                      Total Amount (including fee):
+                    </span>{" "}
+                    ${totalAmount.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1 italic">
+                    Note: The PayPal fee will be deducted from your wallet balance.
+                  </p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </Modal>
   );
