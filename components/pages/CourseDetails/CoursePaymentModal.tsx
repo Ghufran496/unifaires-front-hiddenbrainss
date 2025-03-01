@@ -1115,7 +1115,7 @@ const CoursePaymentModal = ({
               </span>
             </Typography.Paragraph>
             <Typography.Paragraph className="flex justify-between">
-              Shopping & Handling:
+              Shipping & Handling:
               <span className="ml-auto text-purple-600 font-bold">$0.00</span>
             </Typography.Paragraph>
             <Typography.Paragraph className="flex justify-between">

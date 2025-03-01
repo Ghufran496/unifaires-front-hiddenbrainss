@@ -31,6 +31,7 @@ import SendMoneyModal from "./sendMoneyModel";
 import axios from "axios";
 import config from "@/app/utils/config";
 import { TransactionResponse } from "@/components/pages/CourseDetails/dummyTypes";
+import WithdrawToPaypal from "./WithdrawToPaypalModel";
 
 const UserWallet = () => {
   const [form] = Form.useForm();
@@ -76,6 +77,7 @@ const UserWallet = () => {
   >([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [userBalance, setUserBalance] = useState();
+  const [isPaypalModalOpen, setIsPaypalModalOpen] = useState(false);
 
   const filteredTransactions = transactionDetails.filter((transaction) =>
     transaction.transactionType.toLowerCase().includes(searchTerm.toLowerCase())
@@ -814,6 +816,8 @@ const UserWallet = () => {
         />
       )}
 
+      {isPaypalModalOpen && <WithdrawToPaypal setIsModalOpen={setIsPaypalModalOpen} />}
+
       {/* Add Funds Button */}
       {activeSection === "addFunds" && (
         <div className="space-y-6">
@@ -962,13 +966,13 @@ const UserWallet = () => {
                   <circle cx="12" cy="12" r="10"></circle>
                   <path d="m4.9 4.9 14.2 14.2"></path>
                 </svg>
-                <h3 className="font-medium">Bank Transfer</h3>
+                <h3 className="font-medium">Paypal Transfer</h3>
               </div>
               <p className="text-sm text-gray-600 mb-4">
                 2-3 business days • No fee
               </p>
-              <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors">
-                Withdraw to Bank
+              <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors" onClick={() => setIsPaypalModalOpen(true)}>
+                Withdraw to Paypal
               </button>
             </div>
 
