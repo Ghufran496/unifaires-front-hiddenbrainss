@@ -60,9 +60,9 @@ const WithdrawToPaypal = ({ setIsModalOpen }: WithdrawToPaypalProps) => {
       );
 
       if (response.status === 200) {
-        console.log(response)
+        console.log(response);
         message.success("Withdraw success to the provided gmail account.");
-        //   location.reload();
+        location.reload();
       }
       console.log(response);
     } catch (error) {
