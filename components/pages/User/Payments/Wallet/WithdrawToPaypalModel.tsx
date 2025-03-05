@@ -25,7 +25,7 @@ const WithdrawToPaypal = ({ setIsModalOpen }: WithdrawToPaypalProps) => {
   useEffect(() => {
     const fetchUserBalance = async () => {
       if (!session?.user?.id) return;
-      
+
       try {
         setIsLoading(true);
         const response = await axios.get(
@@ -40,7 +40,9 @@ const WithdrawToPaypal = ({ setIsModalOpen }: WithdrawToPaypalProps) => {
 
         if (response.status === 200) {
           setUserBalance(
-            response?.data?.data?.balance >= 0 ? response?.data?.data?.balance : 0
+            response?.data?.data?.balance >= 0
+              ? response?.data?.data?.balance
+              : 0
           );
           console.log("User balance fetched", response.data.data.balance);
         } else {
@@ -59,7 +61,11 @@ const WithdrawToPaypal = ({ setIsModalOpen }: WithdrawToPaypalProps) => {
   }, [session]);
 
   const calculatePaypalFee = (amount: number) => {
-    return 0.25; // Fixed fee of $0.25
+    return amount * 0.025; // 2.5% PayPal fee
+  };
+
+  const calculateUniFairsFee = (amount: number) => {
+    return amount * 0.005; // 0.5% UniFairs fee
   };
 
   const validateEmail = (email: string) =>
@@ -102,18 +108,21 @@ const WithdrawToPaypal = ({ setIsModalOpen }: WithdrawToPaypalProps) => {
 
     setErrors((prev) => ({ ...prev, amount: "" }));
 
-    // Calculate PayPal fee and total amount
+    // Calculate PayPal fee and UniFairs fee
     const amountValue = parseFloat(newAmount);
-    const fee = calculatePaypalFee(amountValue);
-    setPaypalFee(fee);
-    setTotalAmount(amountValue + fee);
+    const paypalFeeAmount = calculatePaypalFee(amountValue);
+    const uniFairsFeeAmount = calculateUniFairsFee(amountValue);
+    const totalFee = paypalFeeAmount + uniFairsFeeAmount;
+
+    setPaypalFee(totalFee);
+    setTotalAmount(amountValue);
 
     // Then check against balance
-    if (amountValue + fee > userBalance) {
+    if (amountValue > userBalance) {
       setBalanceError(
-        `You cannot withdraw more than your available balance ($${userBalance.toFixed(
-          2
-        )})`
+        `You cannot withdraw more than your available balance (${Number(
+          userBalance
+        ).toFixed(2)})`
       );
     } else {
       setBalanceError("");
@@ -149,12 +158,18 @@ const WithdrawToPaypal = ({ setIsModalOpen }: WithdrawToPaypalProps) => {
       return;
     }
 
+    const paypalFee = Number(calculatePaypalFee(Number(amount)).toFixed(2));
+    const uniFairsFee = Number(calculateUniFairsFee(Number(amount)).toFixed(2));
+    const amountToBeReceived = totalAmount - paypalFee - uniFairsFee;
+
     const payload = {
-      amount: totalAmount,
+      amount: amountToBeReceived,
       userId: session?.user.id,
       paypalEmail: email,
+      amounttobededucted: totalAmount,
     };
 
+    console.log(payload);
     try {
       const response = await axios.post(
         `${config.API.API_URL}/paypal/withdraw`,
@@ -249,22 +264,35 @@ const WithdrawToPaypal = ({ setIsModalOpen }: WithdrawToPaypalProps) => {
                 Available balance: ${Number(userBalance || 0).toFixed(2)}
               </p>
 
-              {/* Display PayPal fee and total amount */}
+              {/* Display PayPal and UniFairs fees */}
               {isValidAmountFormat && (
-                <div className="mt-3 p-3 bg-gray-50 rounded-md">
-                  <p className="text-sm text-gray-700">
-                    <span className="font-medium">PayPal Fee:</span> $
-                    {paypalFee.toFixed(2)}
-                  </p>
-                  <p className="text-sm text-gray-700">
-                    <span className="font-medium">
-                      Total Amount (including fee):
-                    </span>{" "}
-                    ${totalAmount.toFixed(2)}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1 italic">
-                    Note: The PayPal fee will be deducted from your wallet balance.
-                  </p>
+                <div className="mt-3 space-y-3">
+                  <div className="p-3 bg-blue-50 rounded-md">
+                    <p className="text-sm text-white mb-2">
+                      <span className="font-medium">Withdrawal Summary:</span>
+                    </p>
+                    <div className="space-y-1">
+                      <p className="text-sm text-white">
+                        Withdrawal Amount: ${Number(amount).toFixed(2)}
+                      </p>
+                      <p className="text-sm text-white">
+                        PayPal Fee (2.5%): $
+                        {calculatePaypalFee(Number(amount)).toFixed(2)}
+                      </p>
+                      <p className="text-sm text-white">
+                        UniFairs Fee (0.5%): $
+                        {calculateUniFairsFee(Number(amount)).toFixed(2)}
+                      </p>
+                      <p className="text-sm font-medium text-white border-t border-gray-200 pt-1 mt-1">
+                        You will receive: $
+                        {(
+                          Number(amount) -
+                          calculatePaypalFee(Number(amount)) -
+                          calculateUniFairsFee(Number(amount))
+                        ).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

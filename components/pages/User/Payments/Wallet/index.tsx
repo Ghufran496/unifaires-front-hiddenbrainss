@@ -778,19 +778,26 @@ const UserWallet = () => {
             <h4 className="font-medium mb-2">Transfer Details</h4>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Amount</span>
+                <span>Amount to Send</span>
                 <span>${sendAmount ?? 0}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Fee (2.5% fee)</span>
-                <span>${((sendAmount ?? 0) * 2.5) / 100}</span>
+                <span>UniFairs Fee (0.5%)</span>
+                <span>${((sendAmount ?? 0) * 0.005).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Recipient will receive</span>
+                <span>${((sendAmount ?? 0) * 0.995).toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-medium text-lg pt-2 border-t border-gray-200">
-                <span>Total</span>
-                <span>
-                  ${((sendAmount ?? 0) * 2.5) / 100 + (sendAmount ?? 0)}
-                </span>
+                <span>Total Amount to be Deducted</span>
+                <span>${sendAmount ?? 0}</span>
               </div>
+            </div>
+            <div className="mt-3 p-3 bg-blue-50 rounded-md">
+              <p className="text-sm text-white">
+                Note: A 0.5% UniFairs fee will be deducted from the transfer amount. The recipient will receive <b>${((sendAmount ?? 0) * 0.995).toFixed(2)}</b> while <b>${((sendAmount ?? 0) * 0.005).toFixed(2)}</b> will be deducted as the UniFairs fee.
+              </p>
             </div>
           </div>
 

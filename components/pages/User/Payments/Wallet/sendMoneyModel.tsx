@@ -27,10 +27,14 @@ const SendMoneyModal = ({
   };
 
   const handlePaymentGateway = async () => {
+    const amountToBeTransferred = (Number(ModalContent.amount) * 0.995).toFixed(
+      2
+    );
     const payload = {
       userId: userId,
       email: ModalContent.email,
       amount: ModalContent.amount,
+      amountToBeTransferred: amountToBeTransferred,
     };
 
     console.log("Payment payload:", payload);

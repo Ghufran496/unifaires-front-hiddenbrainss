@@ -290,9 +290,9 @@ const BankModal = ({
 
     const rate = conversionRates[selectedCountryCurrency] || 1;
     const convertedAmount = ModalContent.Price * rate;
-
+    const amountToBeAdded = (Number(ModalContent.Price) * 0.995).toFixed(2);
     const payload = {
-      amount: ModalContent.Price,
+      amount: amountToBeAdded,
       calculatedAmount: convertedAmount,
       user: session?.user,
       courseId: 1,
@@ -359,10 +359,11 @@ const BankModal = ({
       const selectedGateway = paymentGateways[selectedValue][paymentMethod];
 
       const currentPath = window.location.pathname;
+      const amountToBeAdded = (Number(ModalContent.Price) * 0.995).toFixed(2);
       const payload = {
         selectedGateway,
         paymentMethod: paymentMethod,
-        amount: ModalContent.Price,
+        amount: amountToBeAdded,
         calculatedAmount: convertedAmount,
         paymentGatewayswithcurrency: paymentGateways[selectedValue],
         user: session?.user,
@@ -688,20 +689,28 @@ const BankModal = ({
               </Typography.Title>
               {convertedAmount && selectedValue !== "USA" && (
                 <div className="mt-2 p-3 bg-blue-50 rounded-md">
-                  <Typography.Text className="text-blue-600 block text-center">
+                  <Typography.Text className="text-white block text-center">
                     <strong>Currency Conversion:</strong> {convertedAmount}
                   </Typography.Text>
-                  <Typography.Text className="block mt-1 text-sm text-gray-600 text-center">
+                  <Typography.Text className="block mt-1 text-sm text-white text-center">
                     You will be charged{" "}
                     {(
                       conversionRates[
                         paymentGateways[selectedValue]?.currency || "USD"
                       ] * ModalContent.Price
                     ).toFixed(2)}{" "}
-                    {paymentGateways[selectedValue]?.currency}{" "}
-                    using {isAfricanCountry ? "Flutterwave" : "Stripe"}, but{" "}
-                    {ModalContent.Price} USD will be added to your UniFairs
-                    wallet.
+                    {paymentGateways[selectedValue]?.currency} using{" "}
+                    {isAfricanCountry ? "Flutterwave" : "Stripe"}. A 0.5% UniFairs fee of{" "}
+                    {(Number(ModalContent.Price) * 0.005).toFixed(2)} USD will be deducted, and{" "}
+                    <b>{(Number(ModalContent.Price) * 0.995).toFixed(2)} USD</b> will be added to your UniFairs wallet.
+                  </Typography.Text>
+                </div>
+              )}
+              {!convertedAmount && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-md">
+                  <Typography.Text className="block text-sm text-white text-center">
+                    A 0.5% UniFairs fee of {(Number(ModalContent.Price) * 0.005).toFixed(2)} USD will be deducted, and{" "}
+                    <b>{(Number(ModalContent.Price) * 0.995).toFixed(2)} USD</b> will be added to your UniFairs wallet.
                   </Typography.Text>
                 </div>
               )}
@@ -744,7 +753,7 @@ const BankModal = ({
 
           {isAfricanCountry && (
             <div className="mt-2 p-3 bg-blue-50 rounded-md">
-              <Typography.Text className="text-blue-600">
+              <Typography.Text className="text-white">
                 <strong>Note:</strong> For {selectedValue}, we support
                 Flutterwave bank transfers which provide secure and efficient
                 banking options for your region.

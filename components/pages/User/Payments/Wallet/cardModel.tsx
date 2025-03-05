@@ -227,9 +227,9 @@ const CardModal = ({
     // Calculate the converted amount
     const rate = conversionRates[selectedCountryCurrency] || 1;
     const convertedAmount = ModalContent.Price * rate;
-
+    const amountToBeAdded = (Number(ModalContent.Price) * 0.995).toFixed(2);
     const payload = {
-      amount: ModalContent.Price,
+      amount: amountToBeAdded,
       calculatedAmount: convertedAmount,
       user: session?.user,
       courseId: 1,
@@ -405,10 +405,11 @@ const CardModal = ({
       const selectedGateway = paymentGateways[selectedValue][paymentMethod];
 
       const currentPath = window.location.pathname;
+      const amountToBeAdded = (Number(ModalContent.Price) * 0.995).toFixed(2);
       const payload = {
         selectedGateway,
         paymentMethod: paymentMethod,
-        amount: ModalContent.Price,
+        amount: amountToBeAdded,
         calculatedAmount: convertedAmount,
         paymentGatewayswithcurrency: paymentGateways[selectedValue],
         user: session?.user,
@@ -705,10 +706,24 @@ const CardModal = ({
                         paymentGateways[selectedValue]?.currency || "USD"
                       ] * ModalContent.Price
                     ).toFixed(2)}{" "}
-                    {paymentGateways[selectedValue]?.currency}{" "}
-                    using {isAfricanCountry ? "Flutterwave" : "Stripe"}, but{" "}
-                    {ModalContent.Price} USD will be added to your UniFairs
-                    wallet.
+                    {paymentGateways[selectedValue]?.currency} using{" "}
+                    {isAfricanCountry ? "Flutterwave" : "Stripe"}. A 0.5%
+                    UniFairs fee of{" "}
+                    {(Number(ModalContent.Price) * 0.005).toFixed(2)} USD will
+                    be deducted, and{" "}
+                    <b>{(Number(ModalContent.Price) * 0.995).toFixed(2)} USD</b> will
+                    be added to your UniFairs wallet.
+                  </Typography.Text>
+                </div>
+              )}
+              {!convertedAmount && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-md">
+                  <Typography.Text className="block text-sm text-white text-center">
+                    A 0.5% UniFairs fee of{" "}
+                    {(Number(ModalContent.Price) * 0.005).toFixed(2)} USD will
+                    be deducted, and{" "}
+                    <b>{(Number(ModalContent.Price) * 0.995).toFixed(2)} USD</b> will
+                    be added to your UniFairs wallet.
                   </Typography.Text>
                 </div>
               )}
@@ -751,7 +766,7 @@ const CardModal = ({
 
           {isAfricanCountry && (
             <div className="mt-2 p-3 bg-blue-50 rounded-md">
-              <Typography.Text className="text-blue-600">
+              <Typography.Text className="text-white">
                 <strong>Note:</strong> For {selectedValue}, we support
                 Flutterwave which includes options like card payments, bank
                 transfers,
