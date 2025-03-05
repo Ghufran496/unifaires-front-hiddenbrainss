@@ -20,6 +20,31 @@ export const paymentGateways: any = {
     bank: "Stripe Brazil Bank",
     currency: "BRL",
   },
+  Nigeria: {
+    card: "Flutterwave Nigeria",
+    bank: "Flutterwave Nigeria Bank",
+    currency: "NGN",
+  },
+  Kenya: {
+    card: "Flutterwave Kenya",
+    bank: "Flutterwave Kenya Bank",
+    currency: "KES",
+  },
+  Ghana: {
+    card: "Flutterwave Ghana",
+    bank: "Flutterwave Ghana Bank",
+    currency: "GHS",
+  },
+  SouthAfrica: {
+    card: "Flutterwave South Africa",
+    bank: "Flutterwave South Africa Bank",
+    currency: "ZAR",
+  },
+  Egypt: {
+    card: "Flutterwave Egypt",
+    bank: "Flutterwave Egypt Bank",
+    currency: "EGP",
+  },
 };
 
 export enum PaymentStatus {

@@ -53,6 +53,7 @@ const CardModal = ({
   const [defaultAddress, setDefaultAddress] = useState(false);
   const [addressList, setAddressList] = useState<Array<any>>([]);
   const [selectedAddress, setSelectedAddress] = useState<any | null>(null);
+  const [convertedAmount, setConvertedAmount] = useState<string | null>(null);
 
   const dispatch: any = useAppDispatch();
 
@@ -94,10 +95,63 @@ const CardModal = ({
       });
   };
 
+  const fetchConversionRates = async () => {
+    try {
+      const response = await axios.get(
+        `https://v6.exchangerate-api.com/v6/4d3f92caf2e2597b5fa17e02/latest/USD`
+      );
+      if (response.data && response.data.conversion_rates) {
+        return response.data.conversion_rates;
+      }
+    } catch (error) {
+      console.error("Error fetching conversion rates:", error);
+      return null;
+    }
+  };
+
+  // Update the state to store conversion rates
+  const [conversionRates, setConversionRates] = useState<{
+    [key: string]: number;
+  }>({});
+
+  // Update useEffect to fetch conversion rates
   useEffect(() => {
+    const getConversionRates = async () => {
+      const rates = await fetchConversionRates();
+      if (rates) {
+        setConversionRates(rates);
+      }
+    };
+
     dispatch(fetchCountries());
     fetchUserAddress();
+    getConversionRates();
   }, []);
+
+  // Update the updateConvertedAmount function to use the fetched rates
+  const updateConvertedAmount = (amountInUSD: number) => {
+    const selectedCountryCurrency =
+      paymentGateways[selectedValue]?.currency || "USD";
+    const rate = conversionRates[selectedCountryCurrency] || 1;
+
+    if (selectedCountryCurrency !== "USD") {
+      const converted = amountInUSD * rate;
+      setConvertedAmount(
+        `${amountInUSD} USD = ${converted.toFixed(
+          2
+        )} ${selectedCountryCurrency}`
+      );
+    } else {
+      setConvertedAmount(null);
+    }
+  };
+
+  // Call updateConvertedAmount when component mounts or when ModalContent.Price changes
+  useEffect(() => {
+    if (ModalContent && ModalContent.Price) {
+      updateConvertedAmount(ModalContent.Price);
+    }
+  }, [ModalContent, selectedValue]);
 
   const handleSelectedCountry = (countryCode: any) => {
     dispatch(fetchCountryStates(countryCode));
@@ -148,8 +202,7 @@ const CardModal = ({
     setLoading(false);
   };
 
-  console.log("addressList", addressList);
-  const handlePaymentGateway = async () => {
+  const handleFlutterwavePayment = async () => {
     const formData = form.getFieldsValue();
     const billingAddress = {
       streetAddress: formData.address,
@@ -163,14 +216,192 @@ const CardModal = ({
       userId: session?.user?.id,
       billingAddress: billingAddress,
       transactionAmount: ModalContent.Price,
-      paymentStatus: PaymentStatus.PENDING,
-      transactionType: TransactionType.ADDFUNDS,
+      paymentStatus: "pending",
+      transactionType: "addfunds",
     };
 
-    if (
+    // Get the currency for the selected country
+    const selectedCountryCurrency =
+      paymentGateways[selectedValue]?.currency || "USD";
+
+    // Calculate the converted amount
+    const rate = conversionRates[selectedCountryCurrency] || 1;
+    const convertedAmount = ModalContent.Price * rate;
+
+    const payload = {
+      amount: ModalContent.Price,
+      calculatedAmount: convertedAmount,
+      user: session?.user,
+      courseId: 1,
+      paymentSession: "addfunds",
+      transactionDetails,
+      currency: selectedCountryCurrency,
+      country: selectedValue,
+    };
+
+    try {
+      const response = await axios.post(
+        `${config.API.API_URL}/flutterwave/create-flutterwave-payment`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-token": session?.user?.token,
+          },
+        }
+      );
+
+      console.log(response);
+      if (response?.data?.data?.link) {
+        window.location.href = response.data.data.link;
+      } else {
+        message.error("Payment initiation failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error initiating Flutterwave payment:", error);
+      message.error("Payment initiation failed. Please try again.");
+    }
+  };
+
+  const paymentGateways: any = {
+    Germany: {
+      card: "Stripe Germany",
+      currency: "EUR",
+    },
+    France: {
+      card: "Stripe France",
+      currency: "EUR",
+    },
+    USA: { card: "Stripe USA", currency: "USD" },
+    Canada: {
+      card: "Stripe Canada",
+      currency: "CAD",
+    },
+    Brazil: {
+      card: "Stripe Brazil",
+      currency: "BRL",
+    },
+    Nigeria: {
+      card: "Flutterwave",
+      currency: "NGN",
+    },
+    Kenya: {
+      card: "Flutterwave",
+      currency: "KES",
+    },
+    Ghana: {
+      card: "Flutterwave",
+      currency: "GHS",
+    },
+    SouthAfrica: {
+      card: "Flutterwave",
+      currency: "ZAR",
+    },
+    Egypt: {
+      card: "Flutterwave",
+      currency: "EGP",
+    },
+  };
+
+  const currencyRate = useAppSelector(
+    (state: RootState) => state.currency.currencyRate
+  );
+
+  const formatCurrency = (value: any) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: `${currencyRate ? currency : "USD"}`,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value || 0);
+  };
+
+  const finalAmount = ModalContent.Price;
+
+  const handleChange = (value: any) => {
+    setSelectedValue(value);
+    // Update converted amount when country changes
+    if (ModalContent && ModalContent.Price) {
+      updateConvertedAmount(ModalContent.Price);
+    }
+  };
+
+  const handleRemove = async (id: any) => {
+    try {
+      const response = await axios.delete(
+        `${config.API.API_URL}/payment/user/${session?.user.id}/address/${id}`,
+        {
+          headers: {
+            "x-token": session?.user?.token,
+          },
+        }
+      );
+      if (response.status === 200) {
+        fetchUserAddress();
+        message.success("Address removed successfully");
+      }
+    } catch (error) {}
+  };
+
+  // List of African countries that support Flutterwave
+  const africanCountries = [
+    "Nigeria",
+    "Kenya",
+    "Ghana",
+    "SouthAfrica",
+    "Egypt",
+  ];
+
+  // Check if the selected country is in Africa
+  const isAfricanCountry = africanCountries.includes(selectedValue);
+
+  // Available payment methods based on selected country
+  const getAvailablePaymentMethods = () => {
+    if (paymentGateways[selectedValue]) {
+      return Object.keys(paymentGateways[selectedValue])
+        .filter((key) => key !== "currency")
+        .map((key) => ({
+          label: paymentGateways[selectedValue][key],
+          value: key,
+        }));
+    }
+    return [];
+  };
+
+  // Handle payment based on selected gateway
+  const handlePayment = async () => {
+    await form.validateFields();
+    const formData = form.getFieldsValue();
+    const billingAddress = {
+      streetAddress: formData.address,
+      city: formData.city,
+      stateProvince: formData.state,
+      postalCode: formData.zipcode,
+      country: formData.country,
+    };
+
+    const transactionDetails = {
+      userId: session?.user?.id,
+      billingAddress: billingAddress,
+      transactionAmount: ModalContent.Price,
+      paymentStatus: "pending",
+      transactionType: "addfunds",
+    };
+
+    // Calculate the converted amount
+    const selectedCountryCurrency =
+      paymentGateways[selectedValue]?.currency || "USD";
+    const rate = conversionRates[selectedCountryCurrency] || 1;
+    const convertedAmount = ModalContent.Price * rate;
+
+    if (isAfricanCountry) {
+      // Use Flutterwave for African countries
+      handleFlutterwavePayment();
+    } else if (
       paymentGateways[selectedValue] &&
       paymentGateways[selectedValue][paymentMethod]
     ) {
+      // Use Stripe for other countries
       const selectedGateway = paymentGateways[selectedValue][paymentMethod];
 
       const currentPath = window.location.pathname;
@@ -178,6 +409,7 @@ const CardModal = ({
         selectedGateway,
         paymentMethod: paymentMethod,
         amount: ModalContent.Price,
+        calculatedAmount: convertedAmount,
         paymentGatewayswithcurrency: paymentGateways[selectedValue],
         user: session?.user,
         redirectUrl: currentPath,
@@ -199,8 +431,9 @@ const CardModal = ({
           }
         );
         if (response?.data?.data?.url) {
-          // handleAddress();
           window.location.href = response.data.data.url;
+        } else {
+          message.error("Payment initiation failed. Please try again.");
         }
       } catch (error) {
         console.error("Error initiating payment:", error);
@@ -209,66 +442,6 @@ const CardModal = ({
     } else {
       message.error("Payment gateway not available for this combination.");
     }
-  };
-
-  const paymentGateways: any = {
-    Germany: {
-      card: "Stripe Germany",
-      bank: "Stripe Germany Bank",
-      currency: "EUR",
-    },
-    France: {
-      card: "Stripe France",
-      bank: "Stripe France Bank",
-      currency: "EUR",
-    },
-    USA: { card: "Stripe USA", bank: "Stripe USA Bank", currency: "USD" },
-    Canada: {
-      card: "Stripe Canada",
-      bank: "Stripe Canada Bank",
-      currency: "CAD",
-    },
-    Brazil: {
-      card: "Stripe Brazil",
-      bank: "Stripe Brazil Bank",
-      currency: "BRL",
-    },
-  };
-
-  const currencyRate = useAppSelector(
-    (state: RootState) => state.currency.currencyRate
-  );
-
-  const formatCurrency = (value: any) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: `${currencyRate ? currency : "USD"}`,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value || 0);
-  };
-
-  const finalAmount = ModalContent.Price;
-
-  const handleChange = (value: any) => {
-    setSelectedValue(value);
-  };
-
-  const handleRemove = async (id: any) => {
-    try {
-      const response = await axios.delete(
-        `${config.API.API_URL}/payment/user/${session?.user.id}/address/${id}`,
-        {
-          headers: {
-            "x-token": session?.user?.token,
-          },
-        }
-      );
-      if (response.status === 200) {
-        fetchUserAddress();
-        message.success("Address removed successfully");
-      }
-    } catch (error) {}
   };
 
   return (
@@ -281,7 +454,7 @@ const CardModal = ({
       visible={isOpenPaymentModal}
       onCancel={() => setIsOpenPaymentModal(false)}
       footer={null}
-      width={800}
+      width={1000}
     >
       <div className="space-y-4">
         <div className="space-y-4">
@@ -354,73 +527,6 @@ const CardModal = ({
             </div>
             <Divider className="my-6" />
           </div>
-          {/* <div className="mb-8">
-            <Title level={2}>Choose a Billing Address</Title>
-            <Paragraph>
-              Please selecet a billing address from your address book (below) or
-              enter a new billing address. Don&apos;t worry, you will only need
-              to do this once for each credit card. If you contact us about your
-              order, we will reference your account only by the name you provide
-              below.
-            </Paragraph>
-            <Divider />
-            <div className="flex flex-col gap-4">
-              {addressList !== undefined &&
-                addressList?.length > 0 &&
-                addressList?.map((addressInfo) => {
-                  return (
-                    <Card
-                      hoverable
-                      className={`flex flex-col justify-center items-center gap-2 ${
-                        selectedAddress && selectedAddress.id === addressInfo.id
-                          ? "border-primary"
-                          : ""
-                      }`}
-                      key={addressInfo.id}
-                    >
-                      <div className="flex flex-col justify-center items-center">
-                        <div className="flex gap-2">
-                          <Paragraph className="m-0 text-gray-500">
-                            {addressInfo?.fullname}
-                          </Paragraph>
-                          <Paragraph className="m-0 text-gray-500">
-                            {addressInfo?.address}
-                          </Paragraph>
-                          <Paragraph className="m-0 text-gray-500">
-                            {addressInfo?.city} - {addressInfo?.zipcode},
-                          </Paragraph>
-                          <Paragraph className="m-0 text-gray-500">
-                            {addressInfo?.country}
-                          </Paragraph>
-                          <Paragraph className="m-0 text-gray-500">
-                            {addressInfo?.phoneNumber}
-                          </Paragraph>
-                        </div>
-                        <div className="flex gap-2 mt-4">
-                          <Button
-                            type="primary"
-                            size="large"
-                            className="flex justify-center"
-                            onClick={() => handleUseAddress(addressInfo)}
-                          >
-                            Use this Address
-                          </Button>
-                          <Button
-                            type="primary"
-                            className="hover:cursor-pointer bg-inherit border-none shadow-none text-blue-600"
-                            onClick={() => handleRemove(addressInfo.id)}
-                            loading={loading}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
-                  );
-                })}
-            </div>
-          </div>
-          <Divider /> */}
           <h3 className="font-semibold text-lg mb-2">Billing Address</h3>
           <Form layout="vertical" form={form} size="large">
             <Col>
@@ -581,32 +687,91 @@ const CardModal = ({
           <div>
             <Divider />
             <div className="w-full">
-              <Typography.Title level={4} className=" flex text-red-800">
+              <Typography.Title level={4} className="flex text-red-800">
                 Payment Total:{" "}
                 <span className="text-lg text-purple-600 ml-auto">
                   {formatCurrency(finalAmount)}
                 </span>
               </Typography.Title>
+              {convertedAmount && selectedValue !== "USA" && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-md">
+                  <Typography.Text className="text-white block text-center">
+                    <strong>Currency Conversion:</strong> {convertedAmount}
+                  </Typography.Text>
+                  <Typography.Text className="block mt-1 text-sm text-white text-center">
+                    You will be charged{" "}
+                    {(
+                      conversionRates[
+                        paymentGateways[selectedValue]?.currency || "USD"
+                      ] * ModalContent.Price
+                    ).toFixed(2)}{" "}
+                    {paymentGateways[selectedValue]?.currency}{" "}
+                    using {isAfricanCountry ? "Flutterwave" : "Stripe"}, but{" "}
+                    {ModalContent.Price} USD will be added to your UniFairs
+                    wallet.
+                  </Typography.Text>
+                </div>
+              )}
             </div>
           </div>
+        </div>
+
+        {/* Payment Methods Section */}
+        <div className="mt-4 bg-white p-6 rounded-lg shadow-md">
+          <Typography.Title level={4} className="mb-4">
+            Payment Methods
+          </Typography.Title>
+          <Row gutter={[16, 16]} className="mb-4">
+            <Col xs={24} md={12}>
+              <Typography.Text strong className="block mb-2">
+                Select Country
+              </Typography.Text>
+              <Select
+                className="w-full"
+                value={selectedValue}
+                onChange={handleChange}
+                options={Object.keys(paymentGateways).map((country) => ({
+                  label: country,
+                  value: country,
+                }))}
+              />
+            </Col>
+            <Col xs={24} md={12}>
+              <Typography.Text strong className="block mb-2">
+                Select Payment Method
+              </Typography.Text>
+              <Select
+                className="w-full"
+                value={paymentMethod}
+                onChange={(value) => setPaymentMethod(value)}
+                options={getAvailablePaymentMethods()}
+              />
+            </Col>
+          </Row>
+
+          {isAfricanCountry && (
+            <div className="mt-2 p-3 bg-blue-50 rounded-md">
+              <Typography.Text className="text-blue-600">
+                <strong>Note:</strong> For {selectedValue}, we support
+                Flutterwave which includes options like card payments, bank
+                transfers,
+                {selectedValue === "Kenya"
+                  ? " M-Pesa, "
+                  : selectedValue === "Ghana"
+                  ? " Mobile Money, "
+                  : " "}
+                and more.
+              </Typography.Text>
+            </div>
+          )}
         </div>
 
         <Button
           type="primary"
           className={`w-full h-12 mt-4 bg-purple-600 text-white`}
-          // className={`w-full h-12 mt-4 ${
-          //   form.isFieldsTouched(true) &&
-          //   !form.getFieldsError().filter(({ errors }) => errors.length).length
-          //     ? "bg-purple-600 text-white"
-          //     : "bg-gray-400 text-gray-700 cursor-not-allowed"
-          // }`}
-          // disabled={
-          //   !form.isFieldsTouched(true) ||
-          //   !!form.getFieldsError().filter(({ errors }) => errors.length).length
-          // }
-          onClick={handlePaymentGateway}
+          onClick={handlePayment}
         >
-          Complete Purchase
+          Add funds
         </Button>
       </div>
     </Modal>

@@ -782,7 +782,7 @@ const UserWallet = () => {
                 <span>${sendAmount ?? 0}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Fee (2.5% fee for African transfers)</span>
+                <span>Fee (2.5% fee)</span>
                 <span>${((sendAmount ?? 0) * 2.5) / 100}</span>
               </div>
               <div className="flex justify-between font-medium text-lg pt-2 border-t border-gray-200">
@@ -855,42 +855,7 @@ const UserWallet = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Bank Transfer */}
-            <div className="p-4 border border-gray-200 rounded-lg">
-              <div className="flex items-center space-x-2 mb-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  className="lucide lucide-ban w-5 h-5 text-gray-600"
-                >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="m4.9 4.9 14.2 14.2"></path>
-                </svg>
-                <h3 className="font-medium">Bank Transfer</h3>
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                2-3 business days • No fee
-              </p>
-              <button
-                className={`w-full h-12 mt-4 ${
-                  price && price > 0
-                    ? "w-full h-12 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                    : "w-full h-12 bg-gray-400 text-gray-700 cursor-not-allowed rounded-lg"
-                }`}
-                onClick={handleOpenBankModal}
-                disabled={price && price > 0 ? false : true}
-              >
-                Add from Bank
-              </button>
-            </div>
-
+           
             {/* Card Payment */}
             <div className="p-4 border border-gray-200 rounded-lg">
               <div className="flex items-center space-x-2 mb-4">
@@ -912,7 +877,7 @@ const UserWallet = () => {
                 <h3 className="font-medium">Card Payment</h3>
               </div>
               <p className="text-sm text-gray-600 mb-4">
-                Instant • 2.9% + $0.30 fee
+                $0.5% fee
               </p>
               <button
                 className={`w-full h-12 mt-4 ${
@@ -926,6 +891,42 @@ const UserWallet = () => {
                 Add with Card
               </button>
             </div>
+             {/* Bank Transfer */}
+             <div className="p-4 border border-gray-200 rounded-lg">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  className="lucide lucide-ban w-5 h-5 text-gray-600"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="m4.9 4.9 14.2 14.2"></path>
+                </svg>
+                <h3 className="font-medium">Bank Transfer</h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                $0.5% fee
+              </p>
+              <button
+                className={`w-full h-12 mt-4 ${
+                  price && price > 0
+                    ? "w-full h-12 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    : "w-full h-12 bg-gray-400 text-gray-700 cursor-not-allowed rounded-lg"
+                }`}
+                onClick={handleOpenBankModal}
+                disabled={price && price > 0 ? false : true}
+              >
+                Add from Bank
+              </button>
+            </div>
+
           </div>
         </div>
       )}

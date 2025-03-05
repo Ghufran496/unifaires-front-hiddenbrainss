@@ -71,6 +71,10 @@ const CoursePaymentModal = ({
   const [addressList, setAddressList] = useState<Array<any>>([]);
   const [selectedAddress, setSelectedAddress] = useState<any | null>(null);
   const [dbUser, setDbUser] = useState<any>();
+  const [conversionRates, setConversionRates] = useState<{
+    [key: string]: number;
+  }>({});
+  const [convertedAmount, setConvertedAmount] = useState<string | null>(null);
 
   const countries = useAppSelector(
     (state: RootState) => state.country.countries
@@ -129,10 +133,32 @@ const CoursePaymentModal = ({
   };
 
   useEffect(() => {
+    const getConversionRates = async () => {
+      const rates = await fetchConversionRates();
+      if (rates) {
+        setConversionRates(rates);
+      }
+    };
+
     fetchUserById();
     dispatch(fetchCountries());
     fetchUserAddress();
+    getConversionRates();
   }, []);
+
+  const fetchConversionRates = async () => {
+    try {
+      const response = await axios.get(
+        `https://v6.exchangerate-api.com/v6/4d3f92caf2e2597b5fa17e02/latest/USD`
+      );
+      if (response.data && response.data.conversion_rates) {
+        return response.data.conversion_rates;
+      }
+    } catch (error) {
+      console.error("Error fetching conversion rates:", error);
+      return null;
+    }
+  };
 
   const handleSelectedCountry = (countryCode: any) => {
     dispatch(fetchCountryStates(countryCode));
@@ -183,9 +209,31 @@ const CoursePaymentModal = ({
     setLoading(false);
   };
 
-  const handlePaymentGateway = async () => {
+  const africanCountries = [
+    "Nigeria",
+    "Kenya",
+    "Ghana",
+    "SouthAfrica",
+    "Egypt",
+  ];
+
+  const isAfricanCountry = africanCountries.includes(selectedValue);
+
+  const getAvailablePaymentMethods = () => {
+    if (paymentGateways[selectedValue]) {
+      return Object.keys(paymentGateways[selectedValue])
+        .filter((key) => key !== "currency")
+        .map((key) => ({
+          label: paymentGateways[selectedValue][key],
+          value: key,
+        }));
+    }
+    return [];
+  };
+
+  const handleFlutterwavePayment = async () => {
     const formData = form.getFieldsValue();
-    const biilingaddress = {
+    const billingAddress = {
       streetAddress: formData.address,
       city: formData.city,
       stateProvince: formData.state,
@@ -195,87 +243,48 @@ const CoursePaymentModal = ({
 
     const transactionDetails = {
       userId: session?.user?.id,
-      billingAddress: biilingaddress,
+      billingAddress: billingAddress,
       transactionAmount: finalPrice,
       paymentStatus: PaymentStatus.PENDING,
       transactionType: TransactionType.PAYFUNDS,
     };
 
-    if (paymentMethod === "wallet") {
-      HandlePaymentByWallet();
-    } else {
-      if (
-        paymentGateways[selectedValue] &&
-        paymentGateways[selectedValue][paymentMethod]
-      ) {
-        const selectedGateway = paymentGateways[selectedValue][paymentMethod];
+    const selectedCountryCurrency =
+      paymentGateways[selectedValue]?.currency || "USD";
 
-        const currentPath = window.location.pathname;
-        const payload = {
-          selectedGateway,
-          paymentMethod: paymentMethod,
-          amount: finalPrice,
-          paymentGatewayswithcurrency: paymentGateways[selectedValue],
-          user: session?.user,
-          redirectUrl: currentPath,
-          courseId: ModalContent?.course?.id,
-          paymentSession: "payFunds",
-          transactionDetails,
-        };
+    const rate = conversionRates[selectedCountryCurrency] || 1;
+    const convertedAmount = finalPrice * rate;
 
-        try {
-          const response = await axios.post(
-            `${config.API.API_URL}/payment/create-stripe-session`,
-            payload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                "x-token": session?.user?.token, // Send auth token if needed
-              },
-            }
-          );
-          if (response?.data?.data?.url) {
-            window.location.href = response.data.data.url; // Redirect user to Stripe checkout
-          }
-        } catch (error) {
-          console.error("Error initiating payment:", error);
-          message.error("Payment initiation failed. Please try again.");
+    const payload = {
+      amount: convertedAmount,
+      user: session?.user,
+      courseId: ModalContent?.course?.id,
+      paymentSession: "payFunds",
+      transactionDetails,
+      currency: selectedCountryCurrency,
+      country: selectedValue,
+    };
+
+    try {
+      const response = await axios.post(
+        `${config.API.API_URL}/flutterwave/create-flutterwave-payment`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-token": session?.user?.token,
+          },
         }
+      );
+
+      if (response?.data?.data?.link) {
+        window.location.href = response.data.data.link;
       } else {
-        message.error("Payment gateway not available for this combination.");
+        message.error("Payment initiation failed. Please try again.");
       }
-    }
-  };
-
-  const HandlePaymentByWallet = async () => {
-    const userBalance = session?.user?.balance ?? 0;
-    const updatedAmount = userBalance - finalPrice;
-
-    if (updatedAmount >= 0) {
-      const payload = {
-        userId: session?.user?.id,
-        balance: updatedAmount,
-        courseId: ModalContent?.course?.id,
-      };
-      try {
-        const response = await axios.put(
-          `${config.API.API_URL}/users/update-balance-by-id`,
-          payload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "x-token": session?.user?.token,
-            },
-          }
-        );
-        if (response.status === 200) {
-          message.success("Transaction success from Wallet.");
-          location.reload();
-        }
-      } catch (error) {
-        console.error("Error updating payment:", error);
-        message.error("Transaction failed. Please try again.");
-      }
+    } catch (error) {
+      console.error("Error initiating Flutterwave payment:", error);
+      message.error("Payment initiation failed. Please try again.");
     }
   };
 
@@ -360,6 +369,10 @@ const CoursePaymentModal = ({
 
   const handleChange = (value: any) => {
     setSelectedValue(value);
+    // Update converted amount when country changes
+    if (ModalContent && finalPrice) {
+      updateConvertedAmount(finalPrice);
+    }
   };
 
   const handleRemove = async (id: any) => {
@@ -379,6 +392,139 @@ const CoursePaymentModal = ({
     } catch (error) {}
   };
 
+  useEffect(() => {
+    if (ModalContent && finalPrice) {
+      updateConvertedAmount(finalPrice);
+    }
+  }, [ModalContent, selectedValue]);
+
+  const updateConvertedAmount = (amountInUSD: number) => {
+    const selectedCountryCurrency =
+      paymentGateways[selectedValue]?.currency || "USD";
+    const rate = conversionRates[selectedCountryCurrency] || 1;
+
+    if (selectedCountryCurrency !== "USD") {
+      const converted = amountInUSD * rate;
+      setConvertedAmount(
+        `${amountInUSD} USD = ${converted.toFixed(
+          2
+        )} ${selectedCountryCurrency}`
+      );
+    } else {
+      setConvertedAmount(null);
+    }
+  };
+
+  const handlePaymentGateway = async () => {
+    await form.validateFields();
+    const formData = form.getFieldsValue();
+    const billingAddress = {
+      streetAddress: formData.address,
+      city: formData.city,
+      stateProvince: formData.state,
+      postalCode: formData.zipcode,
+      country: formData.country,
+    };
+
+    const transactionDetails = {
+      userId: session?.user?.id,
+      billingAddress: billingAddress,
+      transactionAmount: finalPrice,
+      paymentStatus: PaymentStatus.PENDING,
+      transactionType: TransactionType.PAYFUNDS,
+    };
+
+    const selectedCountryCurrency =
+      paymentGateways[selectedValue]?.currency || "USD";
+    const rate = conversionRates[selectedCountryCurrency] || 1;
+    const convertedAmount = finalPrice * rate;
+
+    if (paymentMethod === "wallet") {
+      HandlePaymentByWallet();
+    } else if (isAfricanCountry) {
+      // Use Flutterwave for African countries
+      handleFlutterwavePayment();
+    } else if (
+      paymentGateways[selectedValue] &&
+      paymentGateways[selectedValue][paymentMethod]
+    ) {
+      // Use Stripe for other countries
+      const selectedGateway = paymentGateways[selectedValue][paymentMethod];
+
+      const currentPath = window.location.pathname;
+      const payload = {
+        selectedGateway,
+        paymentMethod: paymentMethod,
+        amount: convertedAmount, // Use amount in smallest unit
+        paymentGatewayswithcurrency: paymentGateways[selectedValue],
+        user: session?.user,
+        redirectUrl: currentPath,
+        courseId: ModalContent?.course?.id,
+        paymentSession: "payFunds",
+        transactionDetails,
+      };
+
+      try {
+        const response = await axios.post(
+          `${config.API.API_URL}/payment/create-stripe-session`,
+          payload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "x-token": session?.user?.token,
+            },
+          }
+        );
+        if (response?.data?.data?.url) {
+          window.location.href = response.data.data.url;
+        } else {
+          message.error("Payment initiation failed. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error initiating payment:", error);
+        message.error("Payment initiation failed. Please try again.");
+      }
+    } else {
+      message.error("Payment gateway not available for this combination.");
+    }
+  };
+
+  const HandlePaymentByWallet = async () => {
+    const userBalance = session?.user?.balance ?? 0;
+    const updatedAmount = userBalance - finalPrice;
+
+    if (updatedAmount >= 0) {
+      const payload = {
+        userId: session?.user?.id,
+        balance: updatedAmount,
+        courseId: ModalContent?.course?.id,
+      };
+      try {
+        const response = await axios.put(
+          `${config.API.API_URL}/users/update-balance-by-id`,
+          payload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "x-token": session?.user?.token,
+            },
+          }
+        );
+        if (response.status === 200) {
+          message.success("Transaction success from Wallet.");
+          location.reload();
+        }
+      } catch (error) {
+        console.error("Error updating payment:", error);
+        message.error("Transaction failed. Please try again.");
+      }
+    }
+  };
+
+  console.log(convertedAmount, "convertedAmount");
+  console.log(selectedValue, "selectedValue");
+  console.log(ModalContent, "modalcontent");
+
   return (
     <Modal
       title={
@@ -389,7 +535,7 @@ const CoursePaymentModal = ({
       visible={isOpenPaymentModal}
       onCancel={() => setIsOpenPaymentModal(false)}
       footer={null}
-      width={800}
+      width={1000}
     >
       <div className="space-y-4">
         <div className="flex space-x-2 p-4 bg-slate-50 rounded-md">
@@ -431,6 +577,7 @@ const CoursePaymentModal = ({
             </p>
           </div>
         </div>
+
         <div className="flex space-x-4 mb-4">
           <Radio.Group
             value={paymentMethod}
@@ -1143,37 +1290,90 @@ const CoursePaymentModal = ({
                   {formatCurrency(finalPrice)}
                 </span>
               </Typography.Title>
-              <Collapse ghost size="small">
-                <Collapse.Panel
-                  key={"Exchange-Rate"}
-                  header={
-                    <Typography.Paragraph className="m-0">
-                      Applicable Exchange Rate
-                    </Typography.Paragraph>
-                  }
-                >
-                  {currencyRate && (
-                    <Typography.Paragraph className="m-0  text-base font-semibold italic">
-                      1 USD = {formatCurrency(currencyRate)}
-                    </Typography.Paragraph>
-                  )}
-                </Collapse.Panel>
-              </Collapse>
+              {paymentMethod !== "wallet" &&
+                convertedAmount &&
+                selectedValue !== "USA" && (
+                  <div className="mt-2 p-3 bg-blue-50 rounded-md">
+                    <Typography.Text className="text-blue-600 block text-center">
+                      <strong>Currency Conversion:</strong> {convertedAmount}
+                    </Typography.Text>
+                    <Typography.Text className="block mt-1 text-sm text-gray-600 text-center">
+                      You will be charged{" "}
+                      {(
+                        conversionRates[
+                          paymentGateways[selectedValue]?.currency || "USD"
+                        ] * finalPrice
+                      ).toFixed(2)}{" "}
+                      {paymentGateways[selectedValue]?.currency} using{" "}
+                      {isAfricanCountry ? "Flutterwave" : "Stripe"}, which is
+                      equivalent to {finalPrice} USD of the course price.
+                    </Typography.Text>
+                  </div>
+                )}
             </div>
           </div>
         </div>
+        {paymentMethod !== "wallet" && (
+          <div className="mt-4 bg-white p-6 rounded-lg shadow-md">
+            <Typography.Title level={4} className="mb-4">
+              Payment Methods
+            </Typography.Title>
+            <Row gutter={[16, 16]} className="mb-4">
+              <Col xs={24} md={12}>
+                <Typography.Text strong className="block mb-2">
+                  Select Country
+                </Typography.Text>
+                <Select
+                  className="w-full"
+                  value={selectedValue}
+                  onChange={handleChange}
+                  options={Object.keys(paymentGateways).map((country) => ({
+                    label: country,
+                    value: country,
+                  }))}
+                />
+              </Col>
+              <Col xs={24} md={12}>
+                <Typography.Text strong className="block mb-2">
+                  Select Payment Method
+                </Typography.Text>
+                <Select
+                  className="w-full"
+                  value={paymentMethod}
+                  onChange={(value) => setPaymentMethod(value)}
+                  options={getAvailablePaymentMethods()}
+                />
+              </Col>
+            </Row>
 
+            {isAfricanCountry && (
+              <div className="mt-2 p-3 bg-blue-50 rounded-md">
+                <Typography.Text className="text-blue-600">
+                  <strong>Note:</strong> For {selectedValue}, we support
+                  Flutterwave which includes options like card payments, bank
+                  transfers,
+                  {selectedValue === "Kenya"
+                    ? " M-Pesa, "
+                    : selectedValue === "Ghana"
+                    ? " Mobile Money, "
+                    : " "}
+                  and more.
+                </Typography.Text>
+              </div>
+            )}
+          </div>
+        )}
         <Button
           type="primary"
           className={`w-full h-12 mt-4 ${
-            form.isFieldsTouched(true) &&
-            !form.getFieldsError().filter(({ errors }) => errors.length).length
+            form.isFieldsTouched() &&
+            !form.getFieldsError().some(({ errors }) => errors.length)
               ? "bg-purple-600 text-white"
               : "bg-gray-400 text-gray-700 cursor-not-allowed"
           }`}
           disabled={
-            !form.isFieldsTouched(true) ||
-            !form.getFieldsError().filter(({ errors }) => errors.length).length
+            !form.isFieldsTouched() ||
+            form.getFieldsError().some(({ errors }) => errors.length)
           }
           onClick={handlePaymentGateway}
         >
