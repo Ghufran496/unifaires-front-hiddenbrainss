@@ -32,6 +32,7 @@ import axios from "axios";
 import config from "@/app/utils/config";
 import { TransactionResponse } from "@/components/pages/CourseDetails/dummyTypes";
 import WithdrawToPaypal from "./WithdrawToPaypalModel";
+import WithdrawlToFlutterWave from "./WithdrawlToFlutterWave";
 
 const UserWallet = () => {
   const [form] = Form.useForm();
@@ -71,6 +72,7 @@ const UserWallet = () => {
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [isSendMoneyModalOpen, setIsSendMoneyModalOpen] = useState(false);
   const [SendButtonDisable, setSendButtonDisable] = useState(false);
+  const [isFlutterWaveModalOpen, setIsFlutterWaveModalOpen] = useState(false);
 
   const [transactionDetails, setTransactionDetails] = useState<
     TransactionResponse[]
@@ -796,7 +798,11 @@ const UserWallet = () => {
             </div>
             <div className="mt-3 p-3 bg-blue-50 rounded-md">
               <p className="text-sm text-white">
-                Note: A 0.5% UniFairs fee will be deducted from the transfer amount. The recipient will receive <b>${((sendAmount ?? 0) * 0.995).toFixed(2)}</b> while <b>${((sendAmount ?? 0) * 0.005).toFixed(2)}</b> will be deducted as the UniFairs fee.
+                Note: A 0.5% UniFairs fee will be deducted from the transfer
+                amount. The recipient will receive{" "}
+                <b>${((sendAmount ?? 0) * 0.995).toFixed(2)}</b> while{" "}
+                <b>${((sendAmount ?? 0) * 0.005).toFixed(2)}</b> will be
+                deducted as the UniFairs fee.
               </p>
             </div>
           </div>
@@ -825,6 +831,13 @@ const UserWallet = () => {
 
       {isPaypalModalOpen && (
         <WithdrawToPaypal setIsModalOpen={setIsPaypalModalOpen} />
+      )}
+
+      {isFlutterWaveModalOpen && (
+        <WithdrawlToFlutterWave
+          setIsFlutterWaveModalOpen={setIsFlutterWaveModalOpen}
+          isFlutterWaveModalOpen={isFlutterWaveModalOpen}
+        />
       )}
 
       {/* Add Funds Button */}
@@ -862,7 +875,6 @@ const UserWallet = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-           
             {/* Card Payment */}
             <div className="p-4 border border-gray-200 rounded-lg">
               <div className="flex items-center space-x-2 mb-4">
@@ -883,9 +895,7 @@ const UserWallet = () => {
                 </svg>
                 <h3 className="font-medium">Card Payment</h3>
               </div>
-              <p className="text-sm text-gray-600 mb-4">
-                $0.5% fee
-              </p>
+              <p className="text-sm text-gray-600 mb-4">$0.5% fee</p>
               <button
                 className={`w-full h-12 mt-4 ${
                   price && price > 0
@@ -898,8 +908,8 @@ const UserWallet = () => {
                 Add with Card
               </button>
             </div>
-             {/* Bank Transfer */}
-             <div className="p-4 border border-gray-200 rounded-lg">
+            {/* Bank Transfer */}
+            <div className="p-4 border border-gray-200 rounded-lg">
               <div className="flex items-center space-x-2 mb-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -918,9 +928,7 @@ const UserWallet = () => {
                 </svg>
                 <h3 className="font-medium">Bank Transfer</h3>
               </div>
-              <p className="text-sm text-gray-600 mb-4">
-                $0.5% fee
-              </p>
+              <p className="text-sm text-gray-600 mb-4">$0.5% fee</p>
               <button
                 className={`w-full h-12 mt-4 ${
                   price && price > 0
@@ -933,7 +941,6 @@ const UserWallet = () => {
                 Add from Bank
               </button>
             </div>
-
           </div>
         </div>
       )}
@@ -1007,11 +1014,14 @@ const UserWallet = () => {
                   <rect width="20" height="14" x="2" y="5" rx="2"></rect>
                   <line x1="2" x2="22" y1="10" y2="10"></line>
                 </svg>
-                <h3 className="font-medium">Instant to Card</h3>
+                <h3 className="font-medium">Withdraw to FlutterWave</h3>
               </div>
-              <p className="text-sm text-gray-600 mb-4">Instant • 1.5% fee</p>
-              <button className="w-full bg-gray-100 text-gray-600 py-2 rounded-lg hover:bg-gray-200 transition-colors">
-                Withdraw to Card
+              <p className="text-sm text-gray-600 mb-4">Instant • 0.5% fee</p>
+              <button
+                className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                onClick={() => setIsFlutterWaveModalOpen(true)}
+              >
+                Withdraw to FlutterWave Provided Banks
               </button>
             </div>
           </div>
