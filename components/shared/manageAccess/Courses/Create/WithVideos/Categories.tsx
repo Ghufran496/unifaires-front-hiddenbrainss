@@ -121,7 +121,7 @@ const Categories = ({ prev, requestBody }: any) => {
   const [loading, setLoading] = useState(false);
   const [categoryId, setCategoryId] = useState();
   const [categoryName, setCategoryName] = useState();
-  const CourseId = params.CourseId;
+  const CourseId = params?.CourseId;
 
   useEffect(() => {
     if (

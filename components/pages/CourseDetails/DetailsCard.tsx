@@ -73,7 +73,7 @@ const DetailsCard = ({ course, userType }: any) => {
   const [PurchasedCourses, setPurchasedCourses] = useState<string[]>([]); // State to store purchased courses
   const currentPath =
     typeof window !== "undefined" ? window.location.pathname : null;
-  const propsString: any = params.get("props");
+  const propsString: any = params?.get("props");
   const CourseProps = propsString && JSON.parse(propsString);
   const courseImage =
     course && course.image ? course.image : JSON.parse(course.meta).image;

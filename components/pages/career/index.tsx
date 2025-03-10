@@ -62,9 +62,9 @@ const CareerPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch: any = useAppDispatch();
-  const filterTerms: any = searchParams.get("filterTerms");
-  const categoryName = searchParams.get("category");
-  const jobcatId = searchParams.get("categoryId");
+  const filterTerms: any = searchParams?.get("filterTerms");
+  const categoryName = searchParams?.get("category");
+  const jobcatId = searchParams?.get("categoryId");
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -189,7 +189,7 @@ const CareerPage = () => {
           setCategoryId(catInfo.id);
           setSelectedCategory(catInfo);
           createBreadcrumbsData(catInfo);
-          searchParams.get("categoryId") !== catInfo.id &&
+          searchParams?.get("categoryId") !== catInfo.id &&
             router.push(`/career?categoryId=${catInfo.id}`);
           closeFilter();
           setJobList(jobs);
@@ -269,7 +269,7 @@ const CareerPage = () => {
     }
     dispatch(fetchCountries());
 
-    const paramCategoryId = searchParams.get("categoryId") ?? "";
+    const paramCategoryId = searchParams?.get("categoryId") ?? "";
     if (paramCategoryId || categoryId) {
       fetchJobs(currentPage, paramCategoryId);
     } else {

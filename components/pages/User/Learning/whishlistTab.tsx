@@ -153,7 +153,7 @@ const WhishListTab = ({ activeTab }: any) => {
     await navigator.clipboard.writeText(value);
     toast.success("Link Copied Successfully");
   };
-  const searchQuery: any = searchParams.get("searchBy");
+  const searchQuery: any = searchParams?.get("searchBy");
   const getWishCourses = () => {
     try {
       setFetchingCourse(true);

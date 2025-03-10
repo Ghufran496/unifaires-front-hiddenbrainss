@@ -45,8 +45,8 @@ const FundingsPage = () => {
   const [category, setCategory] = useState<any>();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const filterTerms: any = searchParams.get("filterTerms");
-  const categoryName = searchParams.get("category");
+  const filterTerms: any = searchParams?.get("filterTerms");
+  const categoryName = searchParams?.get("category");
   const [selectedFilters, setSelectedFilters] = useState<any>();
   const [skillOption, setSkillOption] = useState();
 

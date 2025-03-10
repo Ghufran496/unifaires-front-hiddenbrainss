@@ -38,7 +38,7 @@ const BusinessDashboardLayout = ({
   // const screens = useBreakpoint();
   const [collapsed, setCollapsed] = useState(false);
   //
-  let activeRouteArr = pathname.split("/");
+  let activeRouteArr = pathname ? pathname.split("/") : [];
   let activeRoute = `/business${
     activeRouteArr.length > 2 ? `/${activeRouteArr[2]}` : ""
   }`;

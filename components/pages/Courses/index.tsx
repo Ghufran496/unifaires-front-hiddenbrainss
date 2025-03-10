@@ -46,8 +46,8 @@ const CoursesPage = () => {
   const [category, setCategory] = useState<any>();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const filterTerms: any = searchParams.get("filterTerms");
-  const categoryName = searchParams.get("category");
+  const filterTerms: any = searchParams?.get("filterTerms");
+  const categoryName = searchParams?.get("category");
   const [applyLoading, setApplyLoading] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<any>({});
   const [skillOption, setSkillOption] = useState();

@@ -69,7 +69,7 @@ const JobDetailPage = () => {
 
   const fetchJobDetails = async () => {
     try {
-      const res = await dispatch(fetchSinglejob(params.slug));
+      const res = await dispatch(fetchSinglejob(params?.slug));
       if (res.type === "job/fetchSinglejob/fulfilled") {
         const jobs = res.payload;
         setJob(jobs);

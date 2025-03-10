@@ -32,7 +32,7 @@ const UserDashboardLayout = ({
 
   const router = useRouter();
   const pathname = usePathname();
-  const activeRouteArr = pathname.split("/");
+  const activeRouteArr = pathname ? pathname.split("/") : [];
   const screens = Grid.useBreakpoint();
   const closeDashboardMenu = () => {
     setDashboardOpen(false);

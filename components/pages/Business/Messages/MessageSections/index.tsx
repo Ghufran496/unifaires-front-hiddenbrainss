@@ -23,8 +23,10 @@ const MessageSections = ({ setViewMessage }: any) => {
   const pathname = usePathname();
 
   const handleContact = () => {
-    const contact = url.resolve(pathname, "/user/messages/contact");
-    router.push(contact);
+    if (pathname) {
+      const contact = url.resolve(pathname, "/user/messages/contact");
+      router.push(contact);
+    }
   };
 
   const items = [

@@ -38,8 +38,8 @@ const Login = () => {
   const [loginOption, setLoginOption] =
     useState<SegmentedValue>("Personal Login");
   const { data: session, status } = useSession();
-  const redirectUrl = params.get("redirect");
-  const errorMsg = params.get("error");
+  const redirectUrl = params?.get("redirect");
+  const errorMsg = params?.get("error");
 
   const onFinish = async (val: LoginProps) => {
     try {

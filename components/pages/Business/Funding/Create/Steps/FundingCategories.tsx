@@ -120,7 +120,7 @@ const FundingCategories = ({ prev, requestBody, next }: any) => {
   const [loading, setLoading] = useState(false);
   const [categoryId, setCategoryId] = useState();
   const params = useParams();
-  const FundingId = params.FundingId;
+  const FundingId = params?.FundingId;
   const [searchTerms, setSearchTerms] = useState<string>("");
   const myProfile: any = useAppSelector(
     (state: RootState) => state.user.myProfile

@@ -20,13 +20,13 @@ const JobCategories = ({ closeAllDrawer }: any) => {
     if (
       typeof pathName === "string" &&
       pathName.toLowerCase().trim() === "/career" &&
-      typeof searchParams.get("categoryId") === "string"
+      typeof searchParams?.get("categoryId") === "string"
     ) {
-      return searchParams.get("categoryId");
+      return searchParams?.get("categoryId");
     }
 
     return "";
-  }, [searchParams.get("categoryId"), pathName]);
+  }, [searchParams?.get("categoryId"), pathName]);
 
   /**
    * Handle redirect url
