@@ -60,7 +60,7 @@ const FundingBasicInfo = ({ next }: FundingBasicInfoInt) => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const router = useRouter();
   const params = useParams();
-  const FundingId = params.FundingId;
+  const FundingId = params?.FundingId;
   const dispatch: any = useAppDispatch();
 
   const onChange = (e: RadioChangeEvent) => {

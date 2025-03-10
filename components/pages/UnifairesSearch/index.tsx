@@ -16,9 +16,9 @@ const GeneralSearchPage = () => {
   const [category, setCategory] = useState();
   const router = useRouter();
   const params = useSearchParams();
-  const keyword = params.get("keyword");
+  const keyword = params?.get("keyword");
   const screens = Grid.useBreakpoint();
-  const categoryId = params.get("categoryId");
+  const categoryId = params?.get("categoryId");
   console.log(keyword, "here");
 
   const fetchSearchResults = async () => {

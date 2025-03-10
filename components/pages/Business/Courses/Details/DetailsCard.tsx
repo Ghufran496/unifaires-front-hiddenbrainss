@@ -26,7 +26,7 @@ const DetailsCard = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const propsString: any = searchParams.get("props");
+  const propsString: any = searchParams?.get("props");
   if (!propsString) {
     return;
   }

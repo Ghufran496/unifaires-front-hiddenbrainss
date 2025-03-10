@@ -39,7 +39,7 @@ const FundingDetails = () => {
   const [experienceLevel, setExperienceLevel] = useState<any>();
   const router = useRouter();
   const params = useParams();
-  const fundingId = params.slug;
+  const fundingId = params?.slug;
 
   const fetchFundingDetails = async () => {
     try {
@@ -57,7 +57,7 @@ const FundingDetails = () => {
   const fetchApplicantList = async () => {
     try {
       const res = await axiosAccessInstance.get(
-        `/manage-funding/user-funding-applicants/${params.slug}`
+        `/manage-funding/user-funding-applicants/${params?.slug}`
       );
 
       if (res.status) {

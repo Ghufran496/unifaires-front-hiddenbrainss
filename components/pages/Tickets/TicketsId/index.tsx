@@ -25,7 +25,7 @@ const TrackTicketsPage = () => {
   const [form] = Form.useForm();
   const router = useRouter();
   const params = useParams();
-  const ticketId = params.ticketId;
+  const ticketId = params?.ticketId;
   const { data: session, status } = useSession();
   const myProfile: any = useAppSelector(
     (state: RootState) => state.user.myProfile

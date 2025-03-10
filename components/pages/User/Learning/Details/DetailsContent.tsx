@@ -15,7 +15,7 @@ import AuthorCard from "./AuthorCard";
 
 const DetailsContent = () => {
   const params = useParams();
-  const slug = params.query;
+  const slug = params?.query;
 
   return (
     <div className="mb-8">

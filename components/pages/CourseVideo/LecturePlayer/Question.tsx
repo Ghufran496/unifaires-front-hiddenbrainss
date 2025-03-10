@@ -33,7 +33,7 @@ const ReactQuill = dynamic(() => import("react-quill"), {
 const QuestionAndAnswers = ({ course }: any) => {
   const router = useRouter();
   const params = useParams();
-  // const courseId = params.courseId;
+  // const courseId = params?.courseId;
   const courseId = course && course.id;
   const [form] = Form.useForm();
   const [answerForm] = Form.useForm();

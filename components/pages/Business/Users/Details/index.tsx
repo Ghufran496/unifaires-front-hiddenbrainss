@@ -23,7 +23,7 @@ const UserDetails = () => {
   const [userDetail, setUserDetail] = useState<any>();
   const router = useRouter();
   const params = useParams();
-  const userId = params.id;
+  const userId = params?.id;
   console.log(userId);
   const fetchUserDetails = async () => {
     await axios

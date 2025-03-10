@@ -40,11 +40,11 @@ const FundingDetails = () => {
   const [experienceLevel, setExperienceLevel] = useState<any>();
   const router = useRouter();
   const params = useParams();
-  const fundingId = params.slug;
+  const fundingId = params?.slug;
 
   const fetchFundingDetails = async () => {
     try {
-      const res = await axiosInstance.get(`/funding/${params.slug}`);
+      const res = await axiosInstance.get(`/funding/${params?.slug}`);
 
       if (res.status) {
         // console.log(res.data);
@@ -64,7 +64,7 @@ const FundingDetails = () => {
         experienceLevel: experienceLevel,
       });
       const res = await axiosInstance.get(
-        `/funding/user-funding-applicants/${params.slug}${query}`
+        `/funding/user-funding-applicants/${params?.slug}${query}`
       );
 
       if (res.status) {

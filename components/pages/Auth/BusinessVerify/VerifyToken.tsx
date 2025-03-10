@@ -15,8 +15,8 @@ const VerifyTokenPage = () => {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const verificationToken = params && params.token;
-  const userEmail = searchParams && searchParams.get("email");
+  const verificationToken = params && params?.token;
+  const userEmail = searchParams && searchParams?.get("email");
   const [verifying, setVerifying] = useState(true);
   const [verifyFailed, setVerifyFailed] = useState(false);
 

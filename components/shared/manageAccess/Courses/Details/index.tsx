@@ -19,7 +19,7 @@ const CourseDetails = () => {
 
   const fetchCourseDetails = async () => {
     await axios
-      .get(`${config.API.API_URL}/course/${params.courseId}`, {
+      .get(`${config.API.API_URL}/course/${params?.courseId}`, {
         headers: { "x-token": session?.user?.token },
       })
       .then((res) => {

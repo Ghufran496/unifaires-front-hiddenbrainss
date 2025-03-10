@@ -42,7 +42,7 @@ const FundingDetails = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const params = useParams();
-  const fundingId = params.slug;
+  const fundingId = params?.slug;
 
   const fetchFundingDetails = async () => {
     try {

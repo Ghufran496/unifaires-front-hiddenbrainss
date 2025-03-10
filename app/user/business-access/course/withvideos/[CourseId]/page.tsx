@@ -4,7 +4,7 @@ import { CourseProvider } from "@/components/pages/User/Manage-Access/Mange-Cour
 import { useParams } from "next/navigation";
 const CourseId = () => {
   const params = useParams();
-  const courseId = params.CourseId;
+  const courseId = params?.CourseId;
 
   return (
     <UserDashboardLayout>

@@ -23,7 +23,7 @@ const TalentRequest = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const router = useRouter();
   const params = useParams();
-  const { talentId } = params;
+  const talentId = params?.talentId;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const showModal = () => {

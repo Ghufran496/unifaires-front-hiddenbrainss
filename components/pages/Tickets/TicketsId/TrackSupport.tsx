@@ -44,7 +44,7 @@ const TrackSupports = () => {
   const router = useRouter();
   const params = useParams();
   const userId = session?.user.id;
-  const ticketId = params.ticketId;
+  const ticketId = params?.ticketId;
   const [loading, setLoading] = useState(false);
   const [currentChat, setCurrentChat] = useState<any>();
   const [isUploading, setIsUploading] = useState<boolean>(false);

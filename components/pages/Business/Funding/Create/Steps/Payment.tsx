@@ -77,7 +77,7 @@ const Payment = ({
   const [paymentTypeId, setPaymentTypeId] = useState<any>(null);
   const [isNigeria, setIsNigeria] = useState(false);
   const params = useParams();
-  const fundingId = params.FundingId;
+  const fundingId = params?.FundingId;
   const cookies = getCookie("ipInfo");
   const info = typeof cookies === "string" && JSON.parse(cookies);
   const locationData = info && info.data;

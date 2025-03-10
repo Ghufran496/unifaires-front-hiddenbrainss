@@ -45,7 +45,7 @@ const Details = () => {
 
   const fetchFundingDetails = async () => {
     try {
-      const res = await dispatch(fetchSinglefunding(params.id));
+      const res = await dispatch(fetchSinglefunding(params?.id));
       if (res.type === "funding/fetchSinglefunding/fulfilled") {
         const fundings = res.payload;
         setFunding(fundings);

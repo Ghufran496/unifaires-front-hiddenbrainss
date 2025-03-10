@@ -24,7 +24,7 @@ const CourseDetailPage = () => {
   const [courseProps, setCourseProps] = useState(null);
   const params = useParams();
   const [userType, setUserType] = useState();
-  const courseSlug = params.slug;
+  const courseSlug = params?.slug;
   const [courseLoading, setCourseLoading] = useState(true);
   const dispatch: any = useAppDispatch();
 

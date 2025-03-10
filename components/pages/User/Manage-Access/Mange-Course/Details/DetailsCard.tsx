@@ -26,7 +26,7 @@ const DetailsCard = () => {
   const router = useRouter();
   const params = useParams();
 
-  const propsString: any = params.props;
+  const propsString: any = params?.props;
   if (!propsString) {
     return;
   }

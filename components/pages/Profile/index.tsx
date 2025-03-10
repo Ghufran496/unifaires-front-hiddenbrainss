@@ -11,7 +11,7 @@ const UserPublicProfile = () => {
   const [userInfo, setUserInfo] = useState<any>();
   const router = useRouter();
   const params = useParams();
-  const username = params.username;
+  const username = params?.username;
 
   const fetchUserProfile = async () => {
     try {

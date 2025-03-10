@@ -16,7 +16,7 @@ import Link from "next/link";
 const Details = () => {
   const router = useRouter();
   const params = useParams();
-  const { talentId } = params;
+  const talentId = params?.talentId as string;
   const { Text, Title } = Typography;
   const { Item } = Breadcrumb;
   const options = [

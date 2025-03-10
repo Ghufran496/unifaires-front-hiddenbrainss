@@ -14,7 +14,7 @@ import axiosInstance from "@/app/utils/axios-config";
 const Students = () => {
   const router = useRouter();
   const params = useParams();
-  const courseId = params.courseId;
+  const courseId = params?.courseId;
   const [loading, setLoading] = useState(false);
   const [allStudent, setAllStudent] = useState();
   const [currentPage, setCurrentPage] = useState(1);

@@ -15,7 +15,7 @@ const ManagePermissions = () => {
   const router = useRouter();
   const [inviteDetails, setInviteDetails] = useState<any>();
   const params = useParams();
-  const inviteId = params.inviteId;
+  const inviteId = params?.inviteId;
   const [allRoles, setAllRoles] = useState<any>();
   const [allPermissions, setAllPermissions] = useState<any>();
   const [userPermissions, setUserPermissions] = useState<any>();

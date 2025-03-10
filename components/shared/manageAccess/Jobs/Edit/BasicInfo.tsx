@@ -70,7 +70,7 @@ const BasicInfo = () => {
   const { RangePicker } = DatePicker;
   const router = useRouter();
   const params = useParams();
-  const JobId = params.JobId;
+  const JobId = params?.JobId;
   const dispatch: any = useAppDispatch();
 
   const onChange = (e: RadioChangeEvent) => {

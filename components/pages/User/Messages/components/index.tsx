@@ -14,7 +14,7 @@ interface MessagesPageProps {
 const MessagesPage = ({ children }: MessagesPageProps) => {
   const router = useRouter();
   const params = useParams();
-  const userId = params.id;
+  const userId = params?.id;
   const [viewMessage, setViewMessage] = useState(true);
   const screens = Grid.useBreakpoint();
 

@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 
 const FundingId = () => {
   const params = useParams();
-  const fundingId = params.FundingId;
+  const fundingId = params?.FundingId;
 
   return (
     <UserDashboardLayout>

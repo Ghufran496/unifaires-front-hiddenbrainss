@@ -41,7 +41,7 @@ import axiosAccessInstance from "@/app/utils/businessAccess-axios-config";
 const CreateCertificateForm = () => {
   const router = useRouter();
   const params = useParams();
-  const courseId = params.CourseId;
+  const courseId = params?.CourseId;
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState();
   const [certificateTemplates, setCertificateTemplates] = useState<any>(null);

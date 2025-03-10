@@ -63,7 +63,7 @@ const FreeCoursePayment = () => {
   const [billingAddress, setBillingAddress] = useState();
   const [placeOrder, setPlaceOrder] = useState(false);
   const [isBillingAddress, setIsBillingAddress] = useState(false);
-  const courseId = params.CourseId;
+  const courseId = params?.CourseId;
   const cookies = getCookie("ipInfo");
   const info = typeof cookies === "string" && JSON.parse(cookies);
   const locationData = info && info.data;

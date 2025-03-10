@@ -28,7 +28,7 @@ const CourseCheckout = () => {
   const [current, setCurrent] = useState(0);
   const router = useRouter();
   const params = useSearchParams();
-  let decodedParams:any = params.get('d');
+  let decodedParams:any = params?.get('d');
   decodedParams = Buffer.from(decodedParams, 'base64').toString('utf8');
   console.log("decodedParams ===>", decodedParams)
   const cookies = getCookie("ipInfo");
@@ -44,7 +44,7 @@ const CourseCheckout = () => {
   // const stringId: any = params.get("courseId");
   const courseId = stringId && JSON.parse(stringId);
   const [reqBody, setReqBody] = useState<any>();
-  const courseSlug: any = params.get("courseSlug");
+  const courseSlug: any = params?.get("courseSlug");
   const dispatch: any = useAppDispatch();
 
   useEffect(() => {

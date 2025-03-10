@@ -17,7 +17,7 @@ const VerifyInviteToken = () => {
   const router = useRouter();
   const params = useSearchParams();
   const urlPathname = usePathname();
-  const userEmail = params && params.get("email");
+  const userEmail = params && params?.get("email");
   const [verifying, setVerifying] = useState(true);
   const [verifyFailed, setVerifyFailed] = useState(false);
   const callCountRef = useRef(0);

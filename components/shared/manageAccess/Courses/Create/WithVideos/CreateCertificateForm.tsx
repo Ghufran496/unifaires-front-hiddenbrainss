@@ -41,7 +41,7 @@ const CreateCertificateForm = () => {
   const router = useRouter();
   const params = useParams();
   const [form] = Form.useForm();
-  const courseId = params.CourseId;
+  const courseId = params?.CourseId;
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState();
   const [logoUrl, setLogoUrl] = useState();

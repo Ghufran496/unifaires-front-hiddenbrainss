@@ -12,7 +12,7 @@ const StatCard = () => {
   const router = useRouter();
   const [courseStat, setCourseStat] = useState<any>();
   const params = useParams();
-  const courseId = params.courseId;
+  const courseId = params?.courseId;
 
   const fetchCourseStat = async () => {
     try {
